@@ -11,4 +11,4 @@ class ApiResponse {
     }
 }
 
-module.exports = { ApiResponse, ERROR_STATUS };
+module.exports = { ApiResponse, ERROR_STATUS, SUCCESS_STATUS };
