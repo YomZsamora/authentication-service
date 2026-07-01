@@ -14,5 +14,11 @@ module.exports = {
     test: {},
     app: {
         REDIS_URL: process.env.REDIS_URL,
+        JWT_PRIVATE_KEY: process.env.JWT_PRIVATE_KEY,
+        JWT_ISSUER: process.env.JWT_ISSUER,
+        JWT_AUDIENCE: process.env.JWT_AUDIENCE,
+        JWT_KEY_ID: process.env.JWT_KEY_ID,
+        JWT_ACCESS_TOKEN_TTL: process.env.JWT_ACCESS_TOKEN_TTL,
+        JWT_REFRESH_TOKEN_TTL: process.env.JWT_REFRESH_TOKEN_TTL,
     },
 };
