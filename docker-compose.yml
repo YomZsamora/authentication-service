@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+
+  authnetication:
+    build: .
+    command: sh -c "npm run dev"
+    ports:
+      - "3026:3000"
+    env_file:
+      - ./.env
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules 
+    networks:
+      - dev-infra
+
+networks:
+  dev-infra:
+    external: true
