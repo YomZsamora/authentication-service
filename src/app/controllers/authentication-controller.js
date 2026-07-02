@@ -2,6 +2,7 @@
  * This module handles user registration and login functionalities.
  */
 const userRepository = require('../../repositories/user-repository');
+const refreshTokenRepository = require('../../repositories//refresh-token-repository');
 const { ApiResponse } = require('../../utils/responses');
 const { signAccessToken, signRefreshToken } = require('../../services/token-service');
 const { storeRefreshToken } = require('../../services/token-store-service');
@@ -50,7 +51,7 @@ const basicLoginController = async (req, res, next) => {
             role: user.role,
         });
         const { token: refreshToken, jti } = signRefreshToken({ sub: user.id });
-        await storeRefreshToken({ jti, userId: user.id, ttlSeconds: REFRESH_TOKEN_TTL });
+        await refreshTokenRepository.storeRefreshToken({ jti, userId: user.id, ttlSeconds: REFRESH_TOKEN_TTL });
         setRefreshCookie(res, refreshToken);
         const apiResponse = new ApiResponse();
         apiResponse.message = "Logged in successfully.";
