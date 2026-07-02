@@ -37,4 +37,8 @@ const hashPassword = (password) => {
     return bcrypt.hashSync(password, saltRounds);
 };
 
+User.prototype.isValidPassword = function (password) {
+    return bcrypt.compareSync(password, this.password); // Compare hashed password with provided password
+};
+
 module.exports = { User };
