@@ -1,4 +1,6 @@
 const { DataTypes } = require('sequelize');
+const bcrypt = require('bcryptjs');
+const sequelize = require('../configs/sequelize');
 
 const User = sequelize.define('User', {
 
@@ -27,4 +29,12 @@ const User = sequelize.define('User', {
     },
 }, {
     tableName: 'users',
+    hooks: { beforeCreate: (user) => user.password = hashPassword(user.password) }
 });
+
+const hashPassword = (password) => {
+    const saltRounds = 10;
+    return bcrypt.hashSync(password, saltRounds);
+};
+
+module.exports = { User };
