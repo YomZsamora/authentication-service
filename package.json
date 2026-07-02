@@ -19,7 +19,7 @@
     "coverageReporters": [ "text", "html" ],
     "coveragePathIgnorePatterns": [ "/node_modules/", "./src/configs/" ],
     "testPathIgnorePatterns": [ "/node_modules/" ],
-    "setupFilesAfterEnv": [ "<rootDir>/src/tests/setupFilesAfterEnv.js" ]
+    "setupFilesAfterEnv": [ "./src/tests/setupFilesAfterEnv.js" ]
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
