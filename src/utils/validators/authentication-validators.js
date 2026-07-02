@@ -1,6 +1,20 @@
 const { body } = require('express-validator');
-const { BadRequest, NotFound } = require('../exceptions/custom-exceptions');
+const { BadRequest, NotFound, NotAuthenticated, TokenReuseDetected } = require('../exceptions/custom-exceptions');
 const userRepository = require('../../repositories/user-repository');
+const refreshTokenRepository = require('../../repositories//refresh-token-repository');
+const { verifyRefreshToken } = require('../../services/token-service');
+
+/** * Clears the refresh token cookie from the response.
+ * @param {Object} res - The response object used to clear the cookie.
+ */
+const clearRefreshCookie = (res) => {
+    res.clearCookie('refresh_token', {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        path: '/v1/auth/refresh-token',
+    });
+};
 
 /**
  * Validates the email field to ensure it is a valid email address and not from suspicious domains.
@@ -98,6 +112,34 @@ const verifyPasswordValidator = (req, res, next) => {
         })(req, res, next);
 };
 
+/** * Validates that the refresh token cookie is present on the request.
+ * @param {Object} req - The request object containing the refresh token cookie.
+ * @returns {Promise<void>} - Resolves if the cookie is present, otherwise throws an error.
+ */
+const refreshTokenCookieValidator = (req, res, next) => {
+    const token = req.cookies?.refresh_token;
+    if (!token) return next(new NotAuthenticated());
+    req.refreshToken = token;
+    next();
+};
+
+/** * Validates that the provided refresh token exists in the database and has not been revoked.
+ * @param {string} refreshToken - The refresh token to validate.
+ * @returns {Promise<void>} - Resolves if the refresh token exists, otherwise throws an error.
+ */
+const refreshTokenExistsValidator = async (req, res, next) => {
+    const payload = verifyRefreshToken(req.refreshToken);
+    const { sub, jti } = payload;
+    const record = await refreshTokenRepository.findByJti(jti);
+    if (!record) {
+        await refreshTokenRepository.revokeAllUserSessions(sub);
+        clearRefreshCookie(res);
+        return next(new TokenReuseDetected());
+    }
+    req.payload = payload;
+    next();
+}
+
 module.exports = { 
     emailFieldValidator,
     emailRegisteredValidator,
@@ -105,5 +147,7 @@ module.exports = {
     passwordConfirmationFieldValidator,
     loginPasswordFieldValidator,
     emailExistsValidator,
-    verifyPasswordValidator
+    verifyPasswordValidator,
+    refreshTokenCookieValidator,
+    refreshTokenExistsValidator
 };
