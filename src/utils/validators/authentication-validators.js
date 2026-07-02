@@ -1,5 +1,5 @@
 const { body } = require('express-validator');
-const { BadRequest } = require('../exceptions/custom-exceptions');
+const { BadRequest, NotFound } = require('../exceptions/custom-exceptions');
 const { findUserByEmail } = require('../../repositories/user-repository');
 
 /**
@@ -46,7 +46,7 @@ const emailRegisteredValidator = body('email')
  * @param {string} password - The password to validate.
  * @returns {Promise<void>} - Resolves if the password is valid, otherwise throws an error.
  */
-const passwordFieldValidator = body('password')
+const registrationPasswordFieldValidator = body('password')
     .not().isEmpty().withMessage('Password is required.')
     .isLength({ min: 6 }).withMessage('Password must be at least 6 characters long.')
     .isLength({ max: 25 }).withMessage('Password cannot exceed 25 characters.')
@@ -64,9 +64,46 @@ const passwordConfirmationFieldValidator = body('passwordConfirm')
         return true;
     });
 
+/** * Validates the password field during login to ensure it is not empty.
+ * @param {string} password - The password to validate.
+ * @returns {Promise<void>} - Resolves if the password is provided, otherwise throws an error.
+ */
+const loginPasswordFieldValidator = body('password')
+    .not().isEmpty().withMessage('Password is required.');
+
+/** * Validates that the provided email exists in the system during login.
+ * @param {string} email - The email address to check for existence.
+ * @returns {Promise<void>} - Resolves if the email exists, otherwise throws an error.
+ */
+const emailExistsValidator = (req, res, next) => {
+    return body('email')
+        .custom(async (value, { req }) => {
+            const user = await findUserByEmail(value);
+            if (!user) return next(new NotFound('User account not found. Please check your email and try again.'));
+            req.user = user;
+            return true;
+        })(req, res, next);
+    }
+
+/** * Validates that the provided password matches the stored password for the user during login.
+ * @param {string} password - The password to validate.
+ * @returns {Promise<void>} - Resolves if the password is valid, otherwise throws an error.
+ */
+const verifyPasswordValidator = (req, res, next) => {
+    return body('password')
+        .custom((value, { req }) => {
+            const user = req.user;
+            if (!user.isValidPassword(value)) return next(new BadRequest('Invalid password. Please try again.'));
+            return true;
+        })(req, res, next);
+};
+
 module.exports = { 
     emailFieldValidator,
     emailRegisteredValidator,
-    passwordFieldValidator,
+    registrationPasswordFieldValidator,
     passwordConfirmationFieldValidator,
+    loginPasswordFieldValidator,
+    emailExistsValidator,
+    verifyPasswordValidator
 };
