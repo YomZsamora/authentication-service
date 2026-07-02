@@ -45,10 +45,30 @@ class UnprocessedEntity extends Error {
     }
 }
 
+class TokenExpired extends Error {
+
+    constructor() {
+        super("Token has expired.");
+        this.statusCode = 401
+        this.name = "TokenExpired";
+    }
+}
+
+class InvalidJsonWebToken extends Error {
+
+    constructor() {
+        super("Invalid JSON Web Token.");
+        this.statusCode = 401
+        this.name = "InvalidJsonWebToken";
+    }
+}
+
 module.exports = { 
     BadRequest, 
     NotFound, 
     NotAuthenticated, 
     PermissionDenied,
-    UnprocessedEntity
+    UnprocessedEntity,
+    TokenExpired,
+    InvalidJsonWebToken
 };
