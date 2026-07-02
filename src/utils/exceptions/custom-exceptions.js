@@ -57,7 +57,7 @@ class TokenExpired extends Error {
 class InvalidJsonWebToken extends Error {
 
     constructor() {
-        super("Invalid JSON Web Token.");
+        super("Provided token is invalid.");
         this.statusCode = 401
         this.name = "InvalidJsonWebToken";
     }
