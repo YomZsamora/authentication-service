@@ -1,7 +1,7 @@
 /** * Authentication Controller
  * This module handles user registration and login functionalities.
  */
-const { registerUser, findUserByEmail } = require('../../repositories/user-repository');
+const userRepository = require('../../repositories/user-repository');
 const { ApiResponse } = require('../../utils/responses');
 const { signAccessToken, signRefreshToken } = require('../../services/token-service');
 const { storeRefreshToken } = require('../../services/token-store-service');
@@ -27,7 +27,7 @@ const setRefreshCookie = (res, token) => {
 const basicRegistrationController = async (req, res, next) => {
     try {
         const { email, password } = req.body;
-        const user = await registerUser({ email, password });
+        const user = await userRepository.registerUser({ email, password });
         const apiResponse = new ApiResponse();
         apiResponse.message = "New user account created successfully.";
         apiResponse.data = user;
