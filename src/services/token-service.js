@@ -17,7 +17,7 @@ const REFRESH_TOKEN_TTL = Number(config.app.JWT_REFRESH_TOKEN_TTL);
  * @returns {Object} - An object containing the signed token, its unique identifier (jti), and its expiration time.
  */
 const signAccessToken = ({ sub, email, role }) => {
-    const jti = `jti_${randomUUID()}`;
+    const jti = `jti-${randomUUID()}`;
     const token = jwt.sign({ 
             jti,
             sub, 
@@ -41,7 +41,7 @@ const signAccessToken = ({ sub, email, role }) => {
  * @returns {Object} - An object containing the signed token, its unique identifier (jti), and its expiration time.
  */
 const signRefreshToken = ({ sub }) => {
-    const jti = `jti_${randomUUID()}`;
+    const jti = `jti-${randomUUID()}`;
     const token = jwt.sign({ 
             sub, 
             jti 
