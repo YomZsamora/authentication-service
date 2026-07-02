@@ -5,7 +5,9 @@ const {
     NotFound, 
     NotAuthenticated,
     PermissionDenied,
-    UnprocessedEntity
+    UnprocessedEntity,
+    TokenExpired,
+    InvalidJsonWebToken
 } = require('./custom-exceptions');
 
 const exceptionHandler = (err, req, res, next) => {
@@ -38,6 +40,16 @@ const exceptionHandler = (err, req, res, next) => {
     }
 
     if (err instanceof UnprocessedEntity) {
+        statusCode = err.statusCode;
+        apiResponse.message = err.message;
+    }
+
+    if (err instanceof TokenExpired) {
+        statusCode = err.statusCode;
+        apiResponse.message = err.message;
+    }
+
+    if (err instanceof InvalidJsonWebToken) {
         statusCode = err.statusCode;
         apiResponse.message = err.message;
     }
