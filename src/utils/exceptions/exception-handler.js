@@ -4,7 +4,8 @@ const {
     BadRequest, 
     NotFound, 
     NotAuthenticated,
-    PermissionDenied
+    PermissionDenied,
+    UnprocessedEntity
 } = require('./custom-exceptions');
 
 const exceptionHandler = (err, req, res, next) => {
@@ -32,6 +33,11 @@ const exceptionHandler = (err, req, res, next) => {
     }
 
     if (err instanceof PermissionDenied) {
+        apiResponse.code = err.statusCode;
+        apiResponse.message = err.message;
+    }
+
+    if (err instanceof UnprocessedEntity) {
         apiResponse.code = err.statusCode;
         apiResponse.message = err.message;
     }
