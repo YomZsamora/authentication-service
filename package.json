@@ -6,12 +6,21 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "jest": {
+    "testEnvironment": "node",
+    "testTimeout": 10000,
+    "coverageDirectory": "./coverage",
+    "coverageReporters": [ "text", "html" ],
+    "coveragePathIgnorePatterns": [ "/node_modules/", "./src/configs/" ],
+    "testPathIgnorePatterns": [ "/node_modules/" ],
+    "setupFilesAfterEnv": [ "<rootDir>/src/tests/setupFilesAfterEnv.js" ]
+  },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
