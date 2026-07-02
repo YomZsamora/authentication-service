@@ -9,40 +9,40 @@ const {
 } = require('./custom-exceptions');
 
 const exceptionHandler = (err, req, res, next) => {
-
+    
     const apiResponse = new ApiResponse();
-    apiResponse.code = err.statusCode || 500;
     apiResponse.status = ERROR_STATUS;
     apiResponse.message = err.message || "Internal Server Error";
     apiResponse.data = err.errors || {};
+    let statusCode = err.statusCode || 500;
 
     if (err instanceof BadRequest) {
-        apiResponse.code = err.statusCode;
+        statusCode = err.statusCode;
         apiResponse.message = err.message;
         apiResponse.data = err.errors;
     }
 
     if (err instanceof NotFound) {
-        apiResponse.code = err.statusCode;
+        statusCode = err.statusCode;
         apiResponse.message = err.message;
     }
 
     if (err instanceof NotAuthenticated) {
-        apiResponse.code = err.statusCode;
+        statusCode = err.statusCode;
         apiResponse.message = err.message;
     }
 
     if (err instanceof PermissionDenied) {
-        apiResponse.code = err.statusCode;
+        statusCode = err.statusCode;
         apiResponse.message = err.message;
     }
 
     if (err instanceof UnprocessedEntity) {
-        apiResponse.code = err.statusCode;
+        statusCode = err.statusCode;
         apiResponse.message = err.message;
     }
 
-    return res.status(apiResponse.code).json(apiResponse);
+    return res.status(statusCode).json(apiResponse);
 }
 
 const formatExceptions = (errors) => {
