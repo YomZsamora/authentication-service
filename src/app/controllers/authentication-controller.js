@@ -5,8 +5,6 @@ const userRepository = require('../../repositories/user-repository');
 const refreshTokenRepository = require('../../repositories//refresh-token-repository');
 const { ApiResponse } = require('../../utils/responses');
 const { signAccessToken, signRefreshToken } = require('../../services/token-service');
-const { verifyRefreshToken } = require('../../services/token-service');
-const { TokenReuseDetected } = require('../../utils/exceptions/custom-exceptions');
 
 const config = require('../../configs/config');
 const REFRESH_TOKEN_TTL = Number(config.app.JWT_REFRESH_TOKEN_TTL);
