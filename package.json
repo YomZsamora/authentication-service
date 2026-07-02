@@ -16,10 +16,10 @@
     "testEnvironment": "node",
     "testTimeout": 10000,
     "coverageDirectory": "./coverage",
-    "coverageReporters": [ "text", "html" ],
-    "coveragePathIgnorePatterns": [ "/node_modules/", "./src/configs/" ],
-    "testPathIgnorePatterns": [ "/node_modules/" ],
-    "setupFilesAfterEnv": [ "./src/tests/setupFilesAfterEnv.js" ]
+    "coverageReporters": ["text", "html"],
+    "coveragePathIgnorePatterns": ["/node_modules/", "./src/configs/"],
+    "testPathIgnorePatterns": ["/node_modules/"],
+    "setupFilesAfterEnv": ["./src/tests/setupFilesAfterEnv.js"]
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
