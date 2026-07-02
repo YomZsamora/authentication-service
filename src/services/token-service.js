@@ -4,6 +4,7 @@
  */
 const jwt = require('jsonwebtoken');
 const { randomUUID } = require('crypto');
+const redis = require('../configs/redis');
 const config = require('../configs/config');
 const { loadPrivateKey, loadPublicKey } = require('../utils/keys');
 const { TokenExpired, InvalidJsonWebToken } = require('../utils/exceptions/custom-exceptions');
@@ -95,9 +96,29 @@ const verifyRefreshToken = (token) => {
     }
 };
 
+/** * Denylists a token by storing its unique identifier (jti) in Redis with a specified TTL.
+ * @param {Object} params - The parameters for denylisting the token.
+ * @param {string} params.jti - The unique identifier of the token to denylist.
+ * @param {number} params.ttlSeconds - The time-to-live for the denylist entry in seconds.
+ */
+const denylistToken = async ({ jti, ttlSeconds }) => {
+    await redis.set(`denylist:${jti}`, '1', 'EX', ttlSeconds);
+};
+
+/** * Checks if a token is denylisted by looking up its unique identifier (jti) in Redis.
+ * @param {string} jti - The unique identifier of the token to check.
+ * @returns {Promise<boolean>} - Returns true if the token is denylisted, otherwise false.
+ */
+const isDenylisted = async (jti) => {
+    const result = await redis.exists(`denylist:${jti}`);
+    return result === 1;
+};
+
 module.exports = { 
     signAccessToken, 
     signRefreshToken, 
     verifyAccessToken, 
-    verifyRefreshToken 
+    verifyRefreshToken,
+    denylistToken,
+    isDenylisted
 };
