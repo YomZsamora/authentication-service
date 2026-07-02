@@ -63,6 +63,14 @@ class InvalidJsonWebToken extends Error {
     }
 }
 
+class TokenReuseDetected extends Error {
+    constructor() {
+        super("Token reuse detected. All sessions have been revoked.");
+        this.statusCode = 401;
+        this.name = "TokenReuseDetected";
+    }
+}
+
 module.exports = { 
     BadRequest, 
     NotFound, 
@@ -70,5 +78,6 @@ module.exports = {
     PermissionDenied,
     UnprocessedEntity,
     TokenExpired,
-    InvalidJsonWebToken
+    InvalidJsonWebToken,
+    TokenReuseDetected
 };
