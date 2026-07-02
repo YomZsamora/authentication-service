@@ -5,7 +5,8 @@ const userRepository = require('../../repositories/user-repository');
 const refreshTokenRepository = require('../../repositories//refresh-token-repository');
 const { ApiResponse } = require('../../utils/responses');
 const { signAccessToken, signRefreshToken } = require('../../services/token-service');
-const { storeRefreshToken } = require('../../services/token-store-service');
+const { verifyRefreshToken } = require('../../services/token-service');
+const { TokenReuseDetected } = require('../../utils/exceptions/custom-exceptions');
 
 const config = require('../../configs/config');
 const REFRESH_TOKEN_TTL = Number(config.app.JWT_REFRESH_TOKEN_TTL);
@@ -15,7 +16,7 @@ const setRefreshCookie = (res, token) => {
         httpOnly: true,
         secure: true,
         sameSite: 'strict',
-        path: '/v1/auth/refresh',
+        path: '/v1/auth/refresh-token',
         maxAge: REFRESH_TOKEN_TTL * 1000,
     });
 };
@@ -26,6 +27,7 @@ const setRefreshCookie = (res, token) => {
  * @param {Object} res - The response object used to send back the result.
  */
 const basicRegistrationController = async (req, res, next) => {
+
     try {
         const { email, password } = req.body;
         const user = await userRepository.registerUser({ email, password });
@@ -43,6 +45,7 @@ const basicRegistrationController = async (req, res, next) => {
  * @param {Object} res - The response object used to send back the result.
  */
 const basicLoginController = async (req, res, next) => {
+
     try {
         const user = req.user;
         const { token: accessToken, expiresIn } = signAccessToken({
@@ -62,7 +65,35 @@ const basicLoginController = async (req, res, next) => {
     }
 };
 
+/** * Handles the refresh of access tokens using a valid refresh token.
+ * @param {Object} req - The request object containing the refresh token.
+ * @param {Object} res - The response object used to send back the new access token.
+ */
+const refreshTokenController = async (req, res, next) => {
+    
+    try {
+        const payload = req.payload;
+        const { sub, jti } = payload;
+        await refreshTokenRepository.deleteByJti(jti);
+        const { token: accessToken, expiresIn } = signAccessToken({
+            sub,
+            email: payload.email,
+            role: payload.role,
+        });
+        const { token: refreshToken, jti: newJti } = signRefreshToken({ sub });
+        await refreshTokenRepository.storeRefreshToken({ jti: newJti, userId: sub, ttlSeconds: REFRESH_TOKEN_TTL });
+        setRefreshCookie(res, refreshToken);
+        const apiResponse = new ApiResponse();
+        apiResponse.message = "Token refreshed successfully.";
+        apiResponse.data = { accessToken, tokenType: 'Bearer', expiresIn };
+        res.status(200).json(apiResponse);
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = { 
     basicRegistrationController, 
-    basicLoginController 
+    basicLoginController,
+    refreshTokenController
 };
