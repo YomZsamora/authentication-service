@@ -4,6 +4,9 @@ const {
     emailRegisteredValidator,
     registrationPasswordFieldValidator,
     passwordConfirmationFieldValidator,
+    loginPasswordFieldValidator,
+    emailExistsValidator,
+    verifyPasswordValidator
 } = require('../../utils/validators/authentication-validators');
 
 /**
@@ -20,4 +23,20 @@ const basicRegistrationMiddleware = [
     handleBadRequests('Error occurred during registration.')
 ];
 
-module.exports = { basicRegistrationMiddleware };
+/** * Middleware for validating basic login requests.
+ * This middleware checks the validity of the email and password fields,
+ * ensures that the email exists in the database, and verifies that
+ * the provided password matches the stored password for that user.
+ */
+const basicLoginMiddleware = [
+    emailFieldValidator,
+    loginPasswordFieldValidator,
+    handleBadRequests('Error occurred during login.'),
+    emailExistsValidator,
+    verifyPasswordValidator
+];
+
+module.exports = { 
+    basicRegistrationMiddleware, 
+    basicLoginMiddleware 
+};
