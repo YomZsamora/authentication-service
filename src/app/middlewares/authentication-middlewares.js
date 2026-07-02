@@ -6,7 +6,9 @@ const {
     passwordConfirmationFieldValidator,
     loginPasswordFieldValidator,
     emailExistsValidator,
-    verifyPasswordValidator
+    verifyPasswordValidator,
+    refreshTokenCookieValidator,
+    refreshTokenExistsValidator
 } = require('../../utils/validators/authentication-validators');
 
 /**
@@ -36,7 +38,18 @@ const basicLoginMiddleware = [
     verifyPasswordValidator
 ];
 
+/** * Middleware for validating refresh token requests.
+ * This middleware checks for the presence of a refresh token cookie,
+ * verifies that the refresh token exists in the database and has not been revoked,
+ * and handles any errors that may occur during these checks.
+ */
+const refreshTokenMiddleware = [
+    refreshTokenCookieValidator,
+    refreshTokenExistsValidator
+];
+
 module.exports = { 
     basicRegistrationMiddleware, 
-    basicLoginMiddleware 
+    basicLoginMiddleware,
+    refreshTokenMiddleware
 };
