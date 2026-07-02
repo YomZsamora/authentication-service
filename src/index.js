@@ -1,6 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
+const sequelize = require('./configs/sequelize');
 const jwksRoutes = require('./app/routes/jwks-routes');
 const { exceptionHandler } = require('./utils/exceptions/exception-handler');
 
