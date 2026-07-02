@@ -38,7 +38,7 @@ src/
     config.js                     # Environment-aware app config (reads from process.env)
     sequelize.js                  # Sequelize instance, connects using configs/config.js
     redis.js                      # ioredis client instance
-  models/                         # Sequelize model definitions (<model>.js, exports { ModelName })
+  models/                         # sequelize.define(...) model definitions (<model>.js, exports { ModelName })
   migrations/                     # Sequelize-CLI migrations (<timestamp>-<description>.js)
   repositories/                   # Data-access functions per resource (*-repository.js)
   services/                       # External-integration classes and internal multi-step logic modules
@@ -63,7 +63,7 @@ src/
 2. **Middleware arrays per route** — each route has a matching middleware array.
 3. **Service classes for external integrations** — anything that calls a third-party API lives in `src/services/` as a class with a `handle()` method. Internal multi-step logic that has no
 single natural entry point (e.g. signing/verifying JWTs) may instead be a plain function module — see [Service Classes](#service-classes) below for both patterns.
-4. **Repositories own data access** — controllers, validators, and services never call Sequelize models directly. All reads/writes go through a `*-repository.js` function in `src/repositories/`.
+4. **Repositories own data access** — controllers, validators, and services never call Sequelize models directly. All reads/writes go through a `*-repository.js` function in `src/repositories/`, called via a namespace import (`const userRepository = require('.../user-repository')`), not destructured.
 5. **Global error handler** — `exceptionHandler` from `utils/exceptions/exception-handler.js` is registered as the *last* middleware in `index.js`. controllers must call `next(error)` and never
 catch errors silently.
 6. **No secrets in code** — all configuration values come from `process.env` via `dotenv`. Never hardcode connection strings, API keys, or credentials.
@@ -227,6 +227,49 @@ method name — default to the class pattern otherwise.
 
 ---
 
+## Sequelize Models
+
+`src/models/<model>.js` defines the model directly with `sequelize.define(...)` and exports the
+resulting model — **not** the `module.exports = (sequelize, DataTypes) => {...}` factory pattern
+that `sequelize-cli` scaffolds by default.
+
+```jsx
+const { DataTypes } = require('sequelize');
+const sequelize = require('../configs/sequelize');
+
+const RefreshToken = sequelize.define('RefreshToken', {
+    id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+    },
+    jti: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+    },
+    userId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        references: { model: 'users', key: 'id' },
+        onDelete: 'SET NULL',
+    },
+    expiryDate: {
+        type: DataTypes.DATE,
+        allowNull: false,
+    },
+}, {
+    tableName: 'refresh_tokens'
+});
+
+module.exports = { RefreshToken };
+```
+
+Instance methods (e.g. `User.prototype.isValidPassword`) and hooks (e.g. `beforeCreate` password
+hashing) are attached below the `sequelize.define(...)` call, in the same file.
+
+---
+
 ## Data Access — Repositories
 
 `src/repositories/<resource>-repository.js` is the only place allowed to import a Sequelize model
@@ -246,6 +289,16 @@ const findUserByEmail = async (email) => {
 };
 
 module.exports = { registerUser, findUserByEmail };
+```
+
+Callers require the whole repository module as a namespace object and call functions off of it —
+never destructure individual functions out of a repository:
+
+```jsx
+const userRepository = require('../../repositories/user-repository');
+
+const user = await userRepository.findUserByEmail(value);
+const newUser = await userRepository.registerUser({ email, password });
 ```
 
 Validators (e.g. an "email already registered" custom validator) may call repository functions
@@ -326,4 +379,6 @@ npx sequelize-cli migration:generate --name <description>
 - Skip `handleValidationErrors()` in a middleware array that contains `express-validator` chains.
 - Catch errors silently (`catch (e) {}`) — always propagate via `next(error)` or rethrow.
 - Import or query a Sequelize model (`src/models/`) from anywhere other than a `src/repositories/*-repository.js` file.
+- Destructure functions out of a repository import (`const { findUserByEmail } = require(...)`) — always call through the namespace object (`userRepository.findUserByEmail(...)`).
+- Define a Sequelize model using the `module.exports = (sequelize, DataTypes) => {...}` factory pattern — use `sequelize.define(...)` directly, as in `src/models/user.js` / `src/models/refresh-token.js`.
 - Sign or verify a JWT anywhere other than `src/services/token-service.js`.
