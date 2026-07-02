@@ -1,6 +1,6 @@
 const { body } = require('express-validator');
 const { BadRequest, NotFound } = require('../exceptions/custom-exceptions');
-const { findUserByEmail } = require('../../repositories/user-repository');
+const userRepository = require('../../repositories/user-repository');
 
 /**
  * Validates the email field to ensure it is a valid email address and not from suspicious domains.
@@ -38,7 +38,7 @@ const emailFieldValidator = body('email')
  */
 const emailRegisteredValidator = body('email')
     .custom(async (value, { req }) => {
-        const user = await findUserByEmail(value);
+        const user = await userRepository.findUserByEmail(value);
         if (user) return Promise.reject(`${value} is already in use. Please choose a different email.`);
     });
 
@@ -78,7 +78,7 @@ const loginPasswordFieldValidator = body('password')
 const emailExistsValidator = (req, res, next) => {
     return body('email')
         .custom(async (value, { req }) => {
-            const user = await findUserByEmail(value);
+            const user = await userRepository.findUserByEmail(value);
             if (!user) return next(new NotFound('User account not found. Please check your email and try again.'));
             req.user = user;
             return true;
