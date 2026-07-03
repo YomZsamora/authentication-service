@@ -7,7 +7,8 @@ const {
 const { 
     basicRegistrationController, 
     basicLoginController,
-    refreshTokenController
+    refreshTokenController,
+    logoutController
 } = require('../controllers/authentication-controller');
 
 const router = express.Router();
@@ -15,5 +16,6 @@ const router = express.Router();
 router.post('/basic-registration', basicRegistrationMiddleware, basicRegistrationController);
 router.post('/basic-login', basicLoginMiddleware, basicLoginController);
 router.post('/refresh-token', refreshTokenMiddleware, refreshTokenController);
+router.post('/logout', logoutController);
 
 module.exports = router;

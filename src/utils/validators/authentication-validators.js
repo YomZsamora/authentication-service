@@ -3,18 +3,7 @@ const { BadRequest, NotFound, NotAuthenticated, TokenReuseDetected } = require('
 const userRepository = require('../../repositories/user-repository');
 const refreshTokenRepository = require('../../repositories//refresh-token-repository');
 const { verifyRefreshToken } = require('../../services/token-service');
-
-/** * Clears the refresh token cookie from the response.
- * @param {Object} res - The response object used to clear the cookie.
- */
-const clearRefreshCookie = (res) => {
-    res.clearCookie('refresh_token', {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-        path: '/v1/auth/refresh-token',
-    });
-};
+const { clearRefreshCookie } = require('../../app/controllers/authentication-controller')
 
 /**
  * Validates the email field to ensure it is a valid email address and not from suspicious domains.
