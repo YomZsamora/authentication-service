@@ -68,6 +68,7 @@ const basicLoginController = async (req, res, next) => {
             role: user.role,
         });
         const { token: refreshToken, jti } = signRefreshToken({ sub: user.id });
+        await refreshTokenRepository.revokeAllUserSessions(user.id); 
         await refreshTokenRepository.storeRefreshToken({ jti, userId: user.id, ttlSeconds: REFRESH_TOKEN_TTL });
         setRefreshCookie(res, refreshToken);
         const apiResponse = new ApiResponse();
