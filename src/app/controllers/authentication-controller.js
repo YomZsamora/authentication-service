@@ -4,11 +4,15 @@
 const userRepository = require('../../repositories/user-repository');
 const refreshTokenRepository = require('../../repositories//refresh-token-repository');
 const { ApiResponse } = require('../../utils/responses');
-const { signAccessToken, signRefreshToken } = require('../../services/token-service');
+const { signAccessToken, signRefreshToken, verifyRefreshToken, verifyAccessToken, denylistToken } = require('../../services/token-service');
 
 const config = require('../../configs/config');
 const REFRESH_TOKEN_TTL = Number(config.app.JWT_REFRESH_TOKEN_TTL);
 
+/** * Sets a refresh token cookie in the response.
+ * @param {Object} res - The response object used to set the cookie.
+ * @param {string} token - The refresh token to be set in the cookie.
+ */
 const setRefreshCookie = (res, token) => {
     res.cookie('refresh_token', token, {
         httpOnly: true,
@@ -16,6 +20,18 @@ const setRefreshCookie = (res, token) => {
         sameSite: 'strict',
         path: '/v1/auth/refresh-token',
         maxAge: REFRESH_TOKEN_TTL * 1000,
+    });
+};
+
+/** * Clears the refresh token cookie from the response.
+ * @param {Object} res - The response object used to clear the cookie.
+ */
+const clearRefreshCookie = (res) => {
+    res.clearCookie('refresh_token', {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        path: '/v1/auth/refresh-token',
     });
 };
 
@@ -90,8 +106,44 @@ const refreshTokenController = async (req, res, next) => {
     }
 };
 
+/** * Handles the logout of a user by revoking their refresh token and denying their access token.
+ * @param {Object} req - The request object containing the refresh token and access token.
+ * @param {Object} res - The response object used to send back the logout confirmation.
+ */
+const logoutController = async (req, res, next) => {
+
+    try {
+        const refreshToken = req.cookies?.refresh_token;
+        if (refreshToken) {
+            try {
+                const payload = verifyRefreshToken(refreshToken);
+                await refreshTokenRepository.deleteByJti(payload.jti);
+            } catch (_) {}
+        }
+        const authHeader = req.headers.authorization;
+        if (authHeader?.startsWith('Bearer ')) {
+            const accessToken = authHeader.split(' ')[1];
+            try {
+                const payload = verifyAccessToken(accessToken);
+                const remainingTtl = payload.exp - Math.floor(Date.now() / 1000);
+                if (remainingTtl > 0) {
+                    await denylistToken({ jti: payload.jti, ttlSeconds: remainingTtl });
+                }
+            } catch (_) {}
+        }
+        clearRefreshCookie(res);
+        const apiResponse = new ApiResponse();
+        apiResponse.message = "Logged out successfully.";
+        res.status(200).json(apiResponse);
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = { 
     basicRegistrationController, 
     basicLoginController,
-    refreshTokenController
+    refreshTokenController,
+    clearRefreshCookie,
+    logoutController
 };
