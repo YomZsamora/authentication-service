@@ -43,8 +43,8 @@ const clearRefreshCookie = (res) => {
 const basicRegistrationController = async (req, res, next) => {
 
     try {
-        const { email, password } = req.body;
-        const user = await userRepository.registerUser({ email, password });
+        const { email, password, role } = req.body;
+        const user = await userRepository.registerUser({ email, password, role });
         const apiResponse = new ApiResponse();
         apiResponse.message = "New user account created successfully.";
         apiResponse.data = user;
