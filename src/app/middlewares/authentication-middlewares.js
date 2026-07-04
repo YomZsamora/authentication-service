@@ -2,6 +2,7 @@ const { handleBadRequests } = require('../../utils/exceptions/exception-handler'
 const {
     emailFieldValidator,
     emailRegisteredValidator,
+    roleFieldValidator,
     registrationPasswordFieldValidator,
     passwordConfirmationFieldValidator,
     loginPasswordFieldValidator,
@@ -20,6 +21,7 @@ const {
 const basicRegistrationMiddleware = [
     emailFieldValidator,
     emailRegisteredValidator,
+    roleFieldValidator,
     registrationPasswordFieldValidator,
     passwordConfirmationFieldValidator,
     handleBadRequests('Error occurred during registration.')
