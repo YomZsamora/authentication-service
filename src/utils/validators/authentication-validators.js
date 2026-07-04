@@ -3,7 +3,8 @@ const { BadRequest, NotFound, NotAuthenticated, TokenReuseDetected } = require('
 const userRepository = require('../../repositories/user-repository');
 const refreshTokenRepository = require('../../repositories//refresh-token-repository');
 const { verifyRefreshToken } = require('../../services/token-service');
-const { clearRefreshCookie } = require('../../app/controllers/authentication-controller')
+const { clearRefreshCookie } = require('../../app/controllers/authentication-controller');
+const { roles } = require('../../models/user');
 
 /**
  * Validates the email field to ensure it is a valid email address and not from suspicious domains.
@@ -44,6 +45,15 @@ const emailRegisteredValidator = body('email')
         const user = await userRepository.findUserByEmail(value);
         if (user) return Promise.reject(`${value} is already in use. Please choose a different email.`);
     });
+
+/**
+ * Role Field Validator
+ * Validates user role against predefined list of allowed roles
+ */
+const roleFieldValidator = body('role')
+    .exists().withMessage('Role is required.')
+    .not().isEmpty().withMessage('Role cannot be empty.')
+    .isIn(roles).withMessage(`Please select a valid role from: ${roles.join(', ')}.`);
 
 /** * Validates the password field to ensure it meets security requirements.
  * @param {string} password - The password to validate.
@@ -132,6 +142,7 @@ const refreshTokenExistsValidator = async (req, res, next) => {
 module.exports = { 
     emailFieldValidator,
     emailRegisteredValidator,
+    roleFieldValidator,
     registrationPasswordFieldValidator,
     passwordConfirmationFieldValidator,
     loginPasswordFieldValidator,
