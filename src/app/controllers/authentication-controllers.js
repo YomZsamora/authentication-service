@@ -2,7 +2,7 @@
  * This module handles user registration and login functionalities.
  */
 const userRepository = require('../../repositories/user-repository');
-const refreshTokenRepository = require('../../repositories//refresh-token-repository');
+const refreshTokenRepository = require('../../repositories/refresh-token-repository');
 const { ApiResponse } = require('../../utils/responses');
 const { signAccessToken, signRefreshToken, verifyRefreshToken, verifyAccessToken, denylistToken } = require('../../services/token-service');
 
