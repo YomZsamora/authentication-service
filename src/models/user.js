@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const bcrypt = require('bcryptjs');
 const sequelize = require('../configs/sequelize');
+const roles = ['ADMIN', 'USER', 'VENUE', 'PERFORMER'];
 
 const User = sequelize.define('User', {
 
@@ -26,6 +27,7 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: 'user',
+        validate: { isIn: [roles] }
     },
 }, {
     tableName: 'users',
@@ -41,4 +43,4 @@ User.prototype.isValidPassword = function (password) {
     return bcrypt.compareSync(password, this.password); // Compare hashed password with provided password
 };
 
-module.exports = { User };
+module.exports = { User, roles };
