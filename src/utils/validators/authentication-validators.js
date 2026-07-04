@@ -3,7 +3,7 @@ const { BadRequest, NotFound, NotAuthenticated, TokenReuseDetected } = require('
 const userRepository = require('../../repositories/user-repository');
 const refreshTokenRepository = require('../../repositories//refresh-token-repository');
 const { verifyRefreshToken } = require('../../services/token-service');
-const { clearRefreshCookie } = require('../../app/controllers/authentication-controller');
+const { clearRefreshCookie } = require('../../app/controllers/authentication-controllers');
 const { roles } = require('../../models/user');
 
 /**
