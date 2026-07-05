@@ -3,13 +3,13 @@ const {
     basicRegistrationMiddleware, 
     basicLoginMiddleware,
     refreshTokenMiddleware
-} = require('../middlewares/authentication-middlewares');
+} = require('../middlewares/auth-middlewares');
 const { 
     basicRegistrationController, 
     basicLoginController,
     refreshTokenController,
     logoutController
-} = require('../controllers/authentication-controllers');
+} = require('../controllers/auth-controllers');
 
 const router = express.Router();
 
