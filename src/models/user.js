@@ -20,7 +20,13 @@ const User = sequelize.define('User', {
 
     password: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
+    },
+
+    googleSub: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: true,
     },
     
     role: {
@@ -31,7 +37,14 @@ const User = sequelize.define('User', {
     },
 }, {
     tableName: 'users',
-    hooks: { beforeCreate: (user) => user.password = hashPassword(user.password) }
+    indexes: [
+        {
+            name: 'idx_users_googleSub',
+            unique: true,
+            fields: ['googleSub'],
+        }
+    ],
+    hooks: { beforeCreate: (user) => user.password ? hashPassword(user.password) : null }
 });
 
 const hashPassword = (password) => {
