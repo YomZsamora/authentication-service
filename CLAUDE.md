@@ -268,6 +268,37 @@ module.exports = { RefreshToken };
 Instance methods (e.g. `User.prototype.isValidPassword`) and hooks (e.g. `beforeCreate` password
 hashing) are attached below the `sequelize.define(...)` call, in the same file.
 
+### Indexes
+
+All indexes are declared in the `indexes` array in the model options and **must include an explicit `name`**. Never rely on Sequelize's auto-generated index names — they are unpredictable and make migration rollbacks fragile.
+
+Naming convention: `idx_<tableName>_<descriptor>`
+
+```jsx
+}, {
+    tableName: 'likes',
+    indexes: [
+        {
+            name: 'idx_likes_userId',
+            fields: ['userId']
+        },
+        {
+            name: 'idx_likes_entity',
+            fields: ['entityId', 'entityType']
+        },
+        {
+            name: 'unique_likes_userId_entityId_entityType',
+            unique: true,
+            fields: ['userId', 'entityId', 'entityType']
+        }
+    ]
+});
+```
+
+Every index declared in the model must have a corresponding `addIndex` call in a dedicated migration (never added to the original `createTable` migration after it has already run). The `name` in the model and migration must be identical — this is what `removeIndex` targets during rollback.
+
+Foreign key columns (`userId`, `entityId`, etc.) must always be indexed. Primary keys are indexed automatically by Postgres.
+
 ---
 
 ## Data Access — Repositories
