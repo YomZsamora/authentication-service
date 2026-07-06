@@ -14,14 +14,16 @@ const callbackGoogleOAuthValidators = [
  * It checks if the state exists in the PKCE service, retrieves the associated data, and attaches it to the request object.
  * If the state is invalid or expired, it throws a BadRequest error.
  */
-const verifyOAuthStateValidator = query('state')
-    .custom(async (state, { req }) => {
-        const oauthState = await pkceService.getOAuthState(state);
-        if (!oauthState) throw new BadRequest('Invalid or expired OAuth state.');
-        await pkceService.deleteOAuthState(state);
-        req.oauthState = oauthState;
-        return true;
-    });
+const verifyOAuthStateValidator = (req, res, next) => {
+    return query('state')
+        .custom(async (state, { req }) => {
+            const oauthState = await pkceService.getOAuthState(state);
+            if (!oauthState) return next(new BadRequest('Invalid or expired OAuth state.'));
+            await pkceService.deleteOAuthState(state);
+            req.oauthState = oauthState;
+            return true;
+        })(req, res, next);
+    }
 
 module.exports = { 
     callbackGoogleOAuthValidators, 
