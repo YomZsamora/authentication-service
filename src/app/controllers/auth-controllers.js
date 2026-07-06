@@ -145,6 +145,7 @@ module.exports = {
     basicRegistrationController, 
     basicLoginController,
     refreshTokenController,
+    setRefreshCookie,
     clearRefreshCookie,
     logoutController
 };
