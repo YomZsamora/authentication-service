@@ -22,7 +22,6 @@ const generateCodeChallenge = (codeVerifier) => crypto.createHash('sha256').upda
  * @returns {Promise<void>}
  */
 const storeOAuthState = async (state, { codeVerifier, nonce }) => {
-    console.log(`Storing OAuth state in Redis: ${state} with codeVerifier: ${codeVerifier} and nonce: ${nonce}`);
     await redis.set(
         `oauth:state:${state}`,
         JSON.stringify({ codeVerifier, nonce }),
