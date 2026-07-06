@@ -1,9 +1,9 @@
 const { body } = require('express-validator');
 const { BadRequest, NotFound, NotAuthenticated, TokenReuseDetected } = require('../exceptions/custom-exceptions');
 const userRepository = require('../../repositories/user-repository');
-const refreshTokenRepository = require('../../repositories//refresh-token-repository');
+const refreshTokenRepository = require('../../repositories/refresh-token-repository');
 const { verifyRefreshToken } = require('../../services/token-service');
-const { clearRefreshCookie } = require('../../app/controllers/authentication-controllers');
+const { clearRefreshCookie } = require('../../app/controllers/auth-controllers');
 const { roles } = require('../../models/user');
 
 /**

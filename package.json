@@ -16,17 +16,29 @@
     "testEnvironment": "node",
     "testTimeout": 10000,
     "coverageDirectory": "./coverage",
-    "coverageReporters": ["text", "html"],
-    "coveragePathIgnorePatterns": ["/node_modules/", "./src/configs/"],
-    "testPathIgnorePatterns": ["/node_modules/"],
-    "setupFilesAfterEnv": ["./src/tests/setupFilesAfterEnv.js"]
+    "coverageReporters": [
+      "text",
+      "html"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "./src/configs/"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "setupFilesAfterEnv": [
+      "./src/tests/setupFilesAfterEnv.js"
+    ]
   },
   "dependencies": {
+    "axios": "^1.18.1",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-validator": "^7.3.2",
+    "google-auth-library": "^10.9.0",
     "ioredis": "^5.11.1",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.22.0",

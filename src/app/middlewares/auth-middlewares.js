@@ -10,7 +10,7 @@ const {
     verifyPasswordValidator,
     refreshTokenCookieValidator,
     refreshTokenExistsValidator
-} = require('../../utils/validators/authentication-validators');
+} = require('../../utils/validators/auth-validators');
 
 /**
  * Middleware for validating basic registration requests.
