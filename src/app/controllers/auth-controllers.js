@@ -1,5 +1,5 @@
-/** * Authentication Controller
- * This module handles user registration and login functionalities.
+/** * @fileoverview This file contains controllers for handling user authentication, including registration, login, token refresh, and logout.
+ * It provides functions to manage user sessions and handle refresh tokens securely.
  */
 const userRepository = require('../../repositories/user-repository');
 const refreshTokenRepository = require('../../repositories/refresh-token-repository');
