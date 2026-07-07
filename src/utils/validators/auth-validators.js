@@ -41,9 +41,9 @@ const emailFieldValidator = body('email')
  * @returns {Promise<void>} - Resolves if the email is not registered, otherwise throws an error.
  */
 const emailRegisteredValidator = body('email')
-    .custom(async (value, { req }) => {
-        const user = await userRepository.findUserByEmail(value);
-        if (user) return Promise.reject(`${value} is already in use. Please choose a different email.`);
+    .custom(async (email, { req }) => {
+        const user = await userRepository.findUserByEmail(email);
+        if (user) return Promise.reject(`${email} is already in use. Please choose a different email.`);
     });
 
 /**
@@ -72,8 +72,8 @@ const registrationPasswordFieldValidator = body('password')
  */
 const passwordConfirmationFieldValidator = body('passwordConfirm')
     .not().isEmpty().withMessage('Password confirmation is required.')
-    .custom((value, { req }) => {
-        if (value !== req.body.password) throw new BadRequest('Passwords do not match.');
+    .custom((passwordConfirm, { req }) => {
+        if (passwordConfirm !== req.body.password) throw new BadRequest('Passwords do not match.');
         return true;
     });
 
@@ -90,8 +90,8 @@ const loginPasswordFieldValidator = body('password')
  */
 const emailExistsValidator = (req, res, next) => {
     return body('email')
-        .custom(async (value, { req }) => {
-            const user = await userRepository.findUserByEmail(value);
+        .custom(async (email, { req }) => {
+            const user = await userRepository.findUserByEmail(email);
             if (!user) return next(new NotFound('User account not found. Please check your email and try again.'));
             req.user = user;
             return true;
@@ -104,9 +104,9 @@ const emailExistsValidator = (req, res, next) => {
  */
 const verifyPasswordValidator = (req, res, next) => {
     return body('password')
-        .custom((value, { req }) => {
+        .custom((password, { req }) => {
             const user = req.user;
-            if (!user.isValidPassword(value)) return next(new BadRequest('Invalid password. Please try again.'));
+            if (!user.isValidPassword(password)) return next(new BadRequest('Invalid password. Please try again.'));
             return true;
         })(req, res, next);
 };
