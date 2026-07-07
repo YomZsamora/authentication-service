@@ -1,10 +1,11 @@
 /** * @fileoverview This file contains controllers for handling user authentication, including registration, login, token refresh, and logout.
  * It provides functions to manage user sessions and handle refresh tokens securely.
  */
+const { ApiResponse } = require('../../utils/responses');
 const userRepository = require('../../repositories/user-repository');
 const refreshTokenRepository = require('../../repositories/refresh-token-repository');
-const { ApiResponse } = require('../../utils/responses');
-const { signAccessToken, signRefreshToken, verifyRefreshToken, verifyAccessToken, denylistToken } = require('../../services/token-service');
+const userSerializer = require('../../utils/serializers/user-serializer');
+const tokenService = require('../../services/token-service');
 
 const config = require('../../configs/config');
 const REFRESH_TOKEN_TTL = Number(config.app.JWT_REFRESH_TOKEN_TTL);
@@ -47,7 +48,7 @@ const basicRegistrationController = async (req, res, next) => {
         const user = await userRepository.registerUser({ email, password, role });
         const apiResponse = new ApiResponse();
         apiResponse.message = "New user account created successfully.";
-        apiResponse.data = user;
+        apiResponse.data = userSerializer.serializeUser(user);
         res.status(201).json(apiResponse);
     } catch (error) {
         next(error);
@@ -62,12 +63,12 @@ const basicLoginController = async (req, res, next) => {
 
     try {
         const user = req.user;
-        const { token: accessToken, expiresIn } = signAccessToken({
+        const { token: accessToken, expiresIn } = tokenService.signAccessToken({
             sub: user.id,
             email: user.email,
             role: user.role,
         });
-        const { token: refreshToken, jti } = signRefreshToken({ sub: user.id });
+        const { token: refreshToken, jti } = tokenService.signRefreshToken({ sub: user.id });
         await refreshTokenRepository.revokeAllUserSessions(user.id); 
         await refreshTokenRepository.storeRefreshToken({ jti, userId: user.id, ttlSeconds: REFRESH_TOKEN_TTL });
         setRefreshCookie(res, refreshToken);
@@ -90,12 +91,12 @@ const refreshTokenController = async (req, res, next) => {
         const payload = req.payload;
         const { sub, jti } = payload;
         await refreshTokenRepository.deleteByJti(jti);
-        const { token: accessToken, expiresIn } = signAccessToken({
+        const { token: accessToken, expiresIn } = tokenService.signAccessToken({
             sub,
             email: payload.email,
             role: payload.role,
         });
-        const { token: refreshToken, jti: newJti } = signRefreshToken({ sub });
+        const { token: refreshToken, jti: newJti } = tokenService.signRefreshToken({ sub });
         await refreshTokenRepository.storeRefreshToken({ jti: newJti, userId: sub, ttlSeconds: REFRESH_TOKEN_TTL });
         setRefreshCookie(res, refreshToken);
         const apiResponse = new ApiResponse();
@@ -117,7 +118,7 @@ const logoutController = async (req, res, next) => {
         const refreshToken = req.cookies?.refresh_token;
         if (refreshToken) {
             try {
-                const payload = verifyRefreshToken(refreshToken);
+                const payload = tokenService.verifyRefreshToken(refreshToken);
                 await refreshTokenRepository.deleteByJti(payload.jti);
             } catch (_) {}
         }
@@ -125,10 +126,10 @@ const logoutController = async (req, res, next) => {
         if (authHeader?.startsWith('Bearer ')) {
             const accessToken = authHeader.split(' ')[1];
             try {
-                const payload = verifyAccessToken(accessToken);
+                const payload = tokenService.verifyAccessToken(accessToken);
                 const remainingTtl = payload.exp - Math.floor(Date.now() / 1000);
                 if (remainingTtl > 0) {
-                    await denylistToken({ jti: payload.jti, ttlSeconds: remainingTtl });
+                    await tokenService.denylistToken({ jti: payload.jti, ttlSeconds: remainingTtl });
                 }
             } catch (_) {}
         }
