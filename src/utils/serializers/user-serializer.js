@@ -9,7 +9,7 @@
  * @returns {Object} The serialized user object.
  */
 const serializeUser = (user) => ({
-    userId: user.id,
+    id: user.id,
     email: user.email,
     role: user.role,
     createdAt: user.createdAt,
@@ -21,7 +21,7 @@ const serializeUser = (user) => ({
  * @returns {Object} The serialized user object for authentication.
  */
 const serializeAuthUser = (user) => ({
-    userId: user.id,
+    id: user.id,
     email: user.email,
     role: user.role,
 });
