@@ -6,6 +6,7 @@ const userRepository = require('../../repositories/user-repository');
 const refreshTokenRepository = require('../../repositories/refresh-token-repository');
 const userSerializer = require('../../utils/serializers/user-serializer');
 const tokenService = require('../../services/token-service');
+const { NotFound } = require('../../utils/exceptions/custom-exceptions');
 
 const config = require('../../configs/config');
 const REFRESH_TOKEN_TTL = Number(config.app.JWT_REFRESH_TOKEN_TTL);
@@ -88,13 +89,14 @@ const basicLoginController = async (req, res, next) => {
 const refreshTokenController = async (req, res, next) => {
     
     try {
-        const payload = req.payload;
-        const { sub, jti } = payload;
+        const { sub, jti } = req.payload;
+        const user = await userRepository.findUserById(sub);
+        if (!user) throw new NotFound('User account not found. Please check your credentials and try again.');
         await refreshTokenRepository.deleteByJti(jti);
         const { token: accessToken, expiresIn } = tokenService.signAccessToken({
             sub,
-            email: payload.email,
-            role: payload.role,
+            email: user.email,
+            role: user.role,
         });
         const { token: refreshToken, jti: newJti } = tokenService.signRefreshToken({ sub });
         await refreshTokenRepository.storeRefreshToken({ jti: newJti, userId: sub, ttlSeconds: REFRESH_TOKEN_TTL });
