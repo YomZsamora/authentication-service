@@ -50,6 +50,7 @@ src/
     exceptions/
       custom-exceptions.js        # Custom error classes (BadRequest, NotFound, TokenExpired, …)
       exception-handler.js        # Global Express error handler + validation helpers
+    serializers/                  # API response transformers, one file per resource (*-serializer.js)
     validators/                   # express-validator chains per feature (*-validators.js)
     keys.js                       # Loads JWT signing keys from disk, builds the JWKS
     responses.js                  # ApiResponse class + status constants
@@ -337,6 +338,68 @@ directly — they must not query models either.
 
 ---
 
+## API Response Serializers
+
+`src/utils/serializers/<resource>-serializer.js` transforms Sequelize model instances into
+plain objects safe for the API response. Serializers decouple the API contract from the
+internal model shape — field renames, type coercions, and field exclusions happen here and
+nowhere else.
+
+### Pattern
+
+Plain function module — not a class. Named exports, one per representation:
+
+```jsx
+const serializeUser = (user) => ({
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+    authMethod: user.googleSub ? 'google' : 'email',
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+});
+
+const serializeAuthUser = (user) => ({
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+});
+
+module.exports = { serializeUser, serializeAuthUser };
+```
+
+### Naming convention
+
+| Function | Purpose |
+| --- | --- |
+| `serialize<Resource>` | Full detail — used in single-resource GET responses |
+| `serialize<Resource>Summary` | Condensed — used as individual items in list responses (add when needed) |
+| `serialize<Resource>List` | Maps an array through `serialize<Resource>Summary` (add alongside Summary) |
+| `serialize<Resource><Variant>` | Named contextual variants — e.g. `serializeAuthUser` for minimal auth token payloads |
+
+### Rules
+
+- **Never expose** internal columns: `password`, `googleSub`, `deletedAt`, or any hash/token field.
+- **Rename fields**: `id` → `<resource>Id` (e.g. `userId`); derive computed fields where appropriate (e.g. `authMethod` from `googleSub`).
+- **Parse DECIMAL columns** to float with a null guard: `value !== null ? parseFloat(value) : null`.
+- **Controllers only** — serializers are called exclusively from controllers. Never call them from repositories, services, or middleware.
+
+### Controller usage
+
+Require the whole module as a namespace and call functions off it — do not destructure:
+
+```jsx
+const userSerializer = require('../../utils/serializers/user-serializer');
+
+// Full profile response
+apiResponse.data = userSerializer.serializeUser(user);
+
+// Minimal shape for auth responses
+apiResponse.data = { ...userSerializer.serializeAuthUser(user), accessToken, refreshToken };
+```
+
+---
+
 ## Authentication & Tokens
 
 - JWTs are signed with **RS256** using a private/public key pair loaded from disk by
@@ -413,3 +476,4 @@ npx sequelize-cli migration:generate --name <description>
 - Destructure functions out of a repository import (`const { findUserByEmail } = require(...)`) — always call through the namespace object (`userRepository.findUserByEmail(...)`).
 - Define a Sequelize model using the `module.exports = (sequelize, DataTypes) => {...}` factory pattern — use `sequelize.define(...)` directly, as in `src/models/user.js` / `src/models/refresh-token.js`.
 - Sign or verify a JWT anywhere other than `src/services/token-service.js`.
+- Call a serializer from anywhere other than a controller — serializers live in `src/utils/serializers/` and must only be invoked inside `src/app/controllers/`.
