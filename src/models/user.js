@@ -44,7 +44,7 @@ const User = sequelize.define('User', {
             fields: ['googleSub'],
         }
     ],
-    hooks: { beforeCreate: (user) => user.password ? hashPassword(user.password) : null }
+    hooks: { beforeCreate: (user) => { if (user.password) user.password = hashPassword(user.password); } }
 });
 
 const hashPassword = (password) => {
