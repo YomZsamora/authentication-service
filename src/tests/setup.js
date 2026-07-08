@@ -1,26 +1,39 @@
+'use strict';
+const util = require('util');
+const { exec } = require('child_process');
+const execPromise = util.promisify(exec);
 const { Sequelize } = require('sequelize');
 const { test } = require('../configs/config');
-const { exec } = require('child_process');
-const util = require('util');
-const execPromise = util.promisify(exec);
 
 module.exports = async () => {
 
-    const sequelize = new Sequelize('', test.username, test.password, { host: test.host, dialect: test.dialect });
+    const adminSequelize = new Sequelize('postgres', test.username, test.password, {
+        host: test.host,
+        dialect: 'postgres',
+        logging: false,
+    });
+
     try {
-        await sequelize.authenticate();
-        console.log('Connection to the test database has been established successfully.');
-        const [results] = await sequelize.query(`SELECT 1 FROM pg_database WHERE datname = '${test.database}'`);
+        await adminSequelize.authenticate();
+        const [results] = await adminSequelize.query(`SELECT 1 FROM pg_database WHERE datname = '${test.database}'`);
         if (results.length === 0) {
-            await sequelize.query(`CREATE DATABASE "${test.database}"`);
-            console.log(`Database ${test.database} created successfully.`);
+            await adminSequelize.query(`CREATE DATABASE "${test.database}"`);
+            console.log(`Test database "${test.database}" created.`);
         } else {
-            console.log(`Database ${test.database} already exists. Skipping creation.`);
+            console.log(`Test database "${test.database}" already exists. Skipping creation.`);
         }
-        console.log('Running migrations...');
-        await execPromise('npx sequelize-cli db:migrate');
-        console.log('Migrations completed successfully.');
     } catch (error) {
-        console.error('Unable to connect to the database:', error);
+        console.error('Error during test database setup:', error);
+        throw error;
+    } finally {
+        await adminSequelize.close();
+    }
+
+    try {
+        const { stdout } = await execPromise('NODE_ENV=test npx sequelize-cli db:migrate');
+        console.log('Migrations completed:', stdout);
+    } catch (error) {
+        console.error('Migration error:', error.stderr);
+        throw error;
     }
 };
