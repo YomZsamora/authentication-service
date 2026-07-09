@@ -338,6 +338,47 @@ directly — they must not query models either.
 
 ---
 
+## Database Transactions
+
+Use Sequelize's **managed transaction** pattern for any operation that must be atomic — where partial completion would leave data in an inconsistent state.
+
+### Managed transaction pattern
+
+```js
+const sequelize = require('../configs/sequelize');
+
+await sequelize.transaction(async (t) => {
+    await ModelA.destroy({ where: { ... }, transaction: t });
+    await ModelB.bulkCreate(rows, { transaction: t });
+});
+```
+
+Sequelize automatically commits when the callback resolves and automatically rolls back when the callback throws. Never use the unmanaged pattern (manual `t.commit()` / `t.rollback()`) — it requires explicit try-catch and is error-prone.
+
+### Rules
+
+- **Pass `transaction: t` to every Sequelize operation inside the callback.** An operation without it runs on a separate DB connection outside the transaction — atomicity is broken.
+- **Use `bulkCreate` over looping `create`.** N individual `create` calls inside a transaction are N round-trips. `bulkCreate` collapses them into one `INSERT` statement regardless of row count.
+- **Require `sequelize` in the repository file** that needs transactions: `const sequelize = require('../configs/sequelize')`.
+
+### When to use transactions
+
+| Operation | Needs transaction? | Reason |
+| --- | --- | --- |
+| Delete existing records then insert a replacement set | Yes | If insert fails after delete, data is permanently lost |
+| Multi-step writes where any intermediate state is invalid | Yes | Atomicity — all succeed or none do |
+| Single `create` / `update` / `destroy` | No | Already atomic at the DB level |
+| Read-only queries | No | No state change |
+
+### ACID in practice
+
+- **Atomicity** — the entire callback succeeds or the database is unchanged
+- **Consistency** — FK constraints are still enforced within the transaction
+- **Isolation** — concurrent queries see either the old full state or the new full state, never a partial intermediate
+- **Durability** — committed changes survive a crash or restart
+
+---
+
 ## API Response Serializers
 
 `src/utils/serializers/<resource>-serializer.js` transforms Sequelize model instances into
@@ -420,15 +461,214 @@ never hash passwords in controllers, services, or repositories.
 
 ## Testing Guidelines
 
-- Test files mirror the source tree: `src/tests/<controller-name>.test.js`.
-- Use **Supertest** for integration tests — spin up the Express app, make real HTTP calls.
-- Use **Jest mocks** (`jest.fn()`, `jest.spyOn()`) for isolating units (service classes, utility
-functions) without HTTP.
-- Test file naming: `<controller-or-unit-name>.test.js`.
-- Describe blocks: `describe('<Resource> API - /v1/<resource>/<path>', ...)`.
-- Integration tests hit a real Postgres test database (`POSTGRES_DATABASE_TEST`), not a mocked
-Sequelize — `src/tests/setup.js` / `teardown.js` create/migrate and drop it. Only mock the DB layer
-in true unit tests of a repository or service in isolation.
+### Test types
+
+| Type | Tool | What it tests | DB / Redis |
+| --- | --- | --- | --- |
+| **Integration** | Supertest + Jest | Full HTTP request → middleware → controller → DB → serialized response | Real Postgres test DB, real Redis |
+| **Unit** | Jest | A single service, utility, or validator in isolation | Mocked |
+
+Default to integration tests for anything that has an HTTP endpoint. Reach for unit tests only when testing a utility module (e.g. `pkceService`, a serializer) directly without HTTP overhead.
+
+---
+
+### Directory structure
+
+```
+src/tests/
+  setup.js                              # globalSetup — creates test DB, runs migrations
+  teardown.js                           # globalTeardown — drops test DB
+  setupFilesAfterEnv.js                 # runs before each test file — mocks, app ref, cleanup
+  refresh-token-controller.test.js
+  logout-controller.test.js
+  jwks-controller.test.js
+  oauth-controllers.test.js
+  ...
+```
+
+Test files live flat in `src/tests/` (not in resource subdirectories). Naming convention: `<action>-<resource>-controller.test.js`.
+
+---
+
+### Test infrastructure
+
+#### `jest` config (`package.json`)
+
+```json
+"jest": {
+    "testEnvironment": "node",
+    "testTimeout": 10000,
+    "globalSetup": "./src/tests/setup.js",
+    "globalTeardown": "./src/tests/teardown.js",
+    "setupFilesAfterEnv": ["./src/tests/setupFilesAfterEnv.js"]
+}
+```
+
+| Key | Role |
+| --- | --- |
+| `globalSetup` | Runs once in a separate process before all test files. Creates the test DB and runs migrations. Has no access to `jest` globals. |
+| `globalTeardown` | Runs once after all test files. Closes DB connections and drops the test DB. |
+| `setupFilesAfterEnv` | Runs before each test file in the same Jest worker. Registers mocks and schedules connection cleanup. |
+
+#### `setup.js`
+
+Creates `POSTGRES_DATABASE_TEST` if it does not exist, then runs pending migrations:
+
+```js
+await execPromise('NODE_ENV=test npx sequelize-cli db:migrate');
+```
+
+`NODE_ENV=test` is mandatory — without it, the CLI reads `config.development` and migrates the wrong database.
+
+#### `teardown.js`
+
+Calls `pg_terminate_backend` before `DROP DATABASE`. Without this, Postgres refuses to drop a database with active connections.
+
+---
+
+### Mocking strategy
+
+The auth-service uses real RS256 key pairs — `tokenService.signAccessToken` and `signRefreshToken` produce genuine RS256 JWTs in tests. Do not mock `token-service.js` globally.
+
+What IS mocked:
+
+| Module | Why mocked |
+| --- | --- |
+| `GoogleOAuthService.prototype.handle` | Calls real Google token endpoints. Mock per-test with `jest.spyOn` in `beforeEach`, restore in `afterEach`. |
+
+`jest.mock` factory functions cannot reference outer-scope variables (Babel hoisting). Always `require` inside the factory:
+
+```js
+jest.mock('../services/some-service', () => ({
+    method: jest.fn(() => {
+        const dep = require('./dep');   // ✓ require inside factory
+        return dep.something();
+    }),
+}));
+```
+
+---
+
+### Token patterns
+
+**Access token for `Authorization` header:**
+
+```js
+const { token: accessToken } = tokenService.signAccessToken({
+    sub: TEST_USER_ID,
+    email: 'user@test.local',
+    role: 'USER',
+});
+// Use as: `Authorization: Bearer ${accessToken}`
+```
+
+**Refresh token cookie from a login response:**
+
+```js
+const loginRes = await request(app).post('/v1/auth/login').send(credentials);
+const rawCookie = loginRes.headers['set-cookie'][0];
+const cookieHeader = rawCookie.split(';')[0];   // 'refresh_token=eyJ...'
+// Use as: `.set('Cookie', cookieHeader)`
+```
+
+**Expired token:**
+
+```js
+const expiredToken = jwt.sign(
+    { sub: TEST_USER_ID, jti: 'some-jti' },
+    loadPrivateKey(),
+    { algorithm: 'RS256', expiresIn: -1 }
+);
+```
+
+**Orphaned token (valid JWT, no DB record):**
+
+```js
+const { token: orphanedToken } = tokenService.signRefreshToken({ sub: TEST_USER_ID });
+// Never stored in DB — triggers TokenReuseDetected when sent
+```
+
+**Token reuse ordering:** `revokeAllUserSessions(userId)` deletes ALL refresh tokens for a user. The token-reuse test must run AFTER the success test in the same file, or use an orphaned token to avoid invalidating the valid session.
+
+---
+
+### Test case structure
+
+Every endpoint test file follows this layered structure, matching the middleware chain top-to-bottom:
+
+```
+describe('<Resource> API - POST /v1/auth/<path>', () => {
+
+    beforeAll(async () => {
+        // Create DB records, sign tokens
+    });
+
+    afterAll(async () => {
+        // Clean up: delete RefreshToken records before User records
+        // (userId FK is SET NULL on delete — clean in dependency order)
+    });
+
+    describe('Authentication', () => {
+        // Missing header → 401
+        // Malformed header → 401
+        // Expired token → 401
+        // Denylisted token → 401
+    });
+
+    describe('Validation', () => {
+        // Missing required fields → 400
+        // Invalid field values → 400
+    });
+
+    describe('Success', () => {
+        // Happy path — assert full response shape and DB side effects
+    });
+
+    describe('Error propagation', () => {
+        // Direct controller call with broken req → next(error) called
+    });
+});
+```
+
+---
+
+### Determinism and isolation
+
+- **Clean up in dependency order.** `RefreshToken.userId` has `onDelete: 'SET NULL'` — delete `RefreshToken` records before the `User` they reference, or the FK becomes null rather than deleted cleanly.
+- **Use `{ force: true }` for paranoid models** — `User` has `paranoid: true`. Without `force: true`, `destroy` sets `deletedAt` but leaves the row, causing conflicts in the next test run.
+- **Scope cleanup by a constant ID.** Use predictable UUID constants for `userId` values in tests and delete by that ID in `afterAll`. Never `truncate`.
+- **Order success before reuse-detection tests.** The token-reuse path calls `revokeAllUserSessions`, which deletes all tokens for that user. Any test that needs a valid session must run before the reuse test.
+
+---
+
+### Coverage expectations
+
+Every endpoint test file must cover all layers of the middleware chain:
+
+| Layer | Minimum tests |
+| --- | --- |
+| Authentication | Missing header, malformed header, expired token |
+| Validation | Missing + at least one invalid value per validated field |
+| Success | One happy-path test asserting full response shape and DB side effects |
+| Error propagation | One direct controller call with empty `req` |
+
+---
+
+### Jest commands
+
+```bash
+# Run all tests
+npm test
+
+# Run a single test file
+npm test -- --testPathPattern=refresh-token
+
+# Run with verbose output
+npm test -- --verbose
+
+# Run a single named test
+npm test -- --testNamePattern="should return 401"
+```
 
 ---
 
