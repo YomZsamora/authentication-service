@@ -1,4 +1,3 @@
-const Sequelize = require('sequelize');
 const { User } = require('../models/user');
 
 /**
@@ -16,14 +15,7 @@ const registerUser = async ({ email, password, role = 'USER' }) => {
  * @returns {Promise<Object|null>} - The found user object or null if not found.
  */
 const findUserByEmail = async (email) => {
-    return User.findOne({ 
-        where: { 
-            email: Sequelize.where(
-                Sequelize.fn('LOWER', Sequelize.col('email')),
-                Sequelize.fn('LOWER', email)
-            )
-        } 
-    });
+    return User.findOne({ where: { email: email.trim().toLowerCase() } });
 };
 
 /** * Finds a user by their unique identifier (ID).
@@ -43,7 +35,7 @@ const findUserById = async (id) => {
 const findOrCreateGoogleUser = async ({ googleSub, email }) => {
     let user = await User.findOne({ where: { googleSub } });
     if (user) return user;
-    user = await User.findOne({ where: { email } });
+    user = await User.findOne({ where: { email: email.trim().toLowerCase() } });
     if (user) {
         await user.update({ googleSub });
         return user;
@@ -51,9 +43,18 @@ const findOrCreateGoogleUser = async ({ googleSub, email }) => {
     return User.create({ googleSub, email, role: 'USER' });
 };
 
+const userEmailExists = async (email) => {
+    const user = await User.findOne({
+        where: { email: email.trim().toLowerCase() },
+        attributes: ['email'],
+    });
+    return !!user;
+}
+
 module.exports = { 
     registerUser, 
     findUserByEmail, 
     findUserById,
-    findOrCreateGoogleUser
+    findOrCreateGoogleUser,
+    userEmailExists
 };
