@@ -15,7 +15,12 @@ const registerUser = async ({ email, password, role = 'USER' }) => {
  * @returns {Promise<Object|null>} - The found user object or null if not found.
  */
 const findUserByEmail = async (email) => {
-    return User.findOne({ where: { email: email.trim().toLowerCase() } });
+    return User.findOne({
+        where: {
+            email: email.trim().toLowerCase()
+        },
+        attributes: ['id', 'email', 'role']
+    });
 };
 
 /** * Finds a user by their unique identifier (ID).
@@ -23,7 +28,9 @@ const findUserByEmail = async (email) => {
  * @returns {Promise<Object|null>} - The found user object or null if not found.
  */
 const findUserById = async (id) => {
-    return User.findByPk(id);
+    return User.findByPk(id, {
+        attributes: ['id', 'email', 'role']
+    });
 };
 
 /** * Finds a user by their Google sub or creates a new user if not found.
