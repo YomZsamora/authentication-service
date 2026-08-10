@@ -129,9 +129,8 @@ const refreshTokenCookieValidator = (req, res, next) => {
 const refreshTokenExistsValidator = async (req, res, next) => {
     const payload = verifyRefreshToken(req.refreshToken);
     const { sub, jti } = payload;
-    const record = await refreshTokenRepository.findByJti(jti);
-    if (!record) {
-        await refreshTokenRepository.revokeAllUserSessions(sub); // @TODO: Remove this. Revoking done in the controller.
+    const exists = await refreshTokenRepository.verifyJtiExists(jti);
+    if (!exists) {
         clearRefreshCookie(res);
         return next(new TokenReuseDetected());
     }

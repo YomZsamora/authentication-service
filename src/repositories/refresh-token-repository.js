@@ -16,8 +16,12 @@ const storeRefreshToken = async ({ jti, userId, ttlSeconds }) => {
  * @param {string} jti - The unique identifier of the refresh token to find.
  * @returns {Promise<Object|null>} - A promise that resolves to the found refresh token record or null if not found.
  */
-const findByJti = async (jti) => { // @TODO: Rename utul function. Only check. existence instead of returning the record.
-    return RefreshToken.findOne({ where: { jti } }); 
+const verifyJtiExists = async (jti) => { 
+    const refreshToken = await RefreshToken.findOne({ 
+        where: { jti },
+        attributes: ['jti'], 
+    }); 
+    return !!refreshToken;
 };
 
 /** * Deletes a refresh token record by its unique identifier (jti).
@@ -38,7 +42,7 @@ const revokeAllUserSessions = async (userId) => {
 
 module.exports = { 
     storeRefreshToken, 
-    findByJti, 
+    verifyJtiExists, 
     deleteByJti, 
     revokeAllUserSessions 
 };
