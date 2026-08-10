@@ -42,7 +42,7 @@ const emailFieldValidator = body('email')
  */
 const emailRegisteredValidator = body('email')
     .custom(async (email, { req }) => {
-        const user = await userRepository.findUserByEmail(email);
+        const user = await userRepository.userEmailExists(email);
         if (user) return Promise.reject(`${email} is already in use. Please choose a different email.`);
     });
 
@@ -131,7 +131,7 @@ const refreshTokenExistsValidator = async (req, res, next) => {
     const { sub, jti } = payload;
     const record = await refreshTokenRepository.findByJti(jti);
     if (!record) {
-        await refreshTokenRepository.revokeAllUserSessions(sub);
+        await refreshTokenRepository.revokeAllUserSessions(sub); // @TODO: Remove this. Revoking done in the controller.
         clearRefreshCookie(res);
         return next(new TokenReuseDetected());
     }
