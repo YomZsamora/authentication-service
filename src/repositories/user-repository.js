@@ -1,3 +1,4 @@
+const { Op } = require('sequelize');
 const { User } = require('../models/user');
 
 /**
@@ -58,10 +59,18 @@ const userEmailExists = async (email) => {
     return !!user;
 }
 
-module.exports = { 
-    registerUser, 
-    findUserByEmail, 
+const findUsersByIds = async (ids) => {
+    return User.findAll({
+        where: { id: { [Op.in]: ids } },
+        attributes: ['id', 'role'],
+    });
+};
+
+module.exports = {
+    registerUser,
+    findUserByEmail,
     findUserById,
     findOrCreateGoogleUser,
-    userEmailExists
+    userEmailExists,
+    findUsersByIds,
 };
