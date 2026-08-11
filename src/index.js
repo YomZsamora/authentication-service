@@ -5,6 +5,7 @@ const sequelize = require('./configs/sequelize');
 const jwksRoutes = require('./app/routes/jwks-routes');
 const authRoutes = require('./app/routes/auth-routes');
 const oauthRoutes = require('./app/routes/oauth-routes');
+const internalRoutes = require('./app/routes/internal-routes');
 const { exceptionHandler } = require('./utils/exceptions/exception-handler');
 
 dotenv.config();
@@ -18,6 +19,7 @@ app.get('/health', (req, res) => res.send('The authentication service is running
 app.use('/.well-known', jwksRoutes);
 app.use('/v1/auth/', authRoutes);
 app.use('/v1/oauth/', oauthRoutes);
+app.use('/v1/internal', internalRoutes);
 app.use(exceptionHandler);
 
 if (require.main === module) {
