@@ -1,7 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
-const sequelize = require('./configs/sequelize');
+require('./configs/sequelize');
 const jwksRoutes = require('./app/routes/jwks-routes');
 const authRoutes = require('./app/routes/auth-routes');
 const oauthRoutes = require('./app/routes/oauth-routes');
