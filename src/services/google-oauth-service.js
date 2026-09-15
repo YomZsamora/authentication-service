@@ -47,7 +47,7 @@ class GoogleOAuthService {
                 code_verifier: codeVerifier,
             });
             return response.data;
-        } catch (error) {
+        } catch (_error) {
             throw new BadRequest('Failed to exchange authorization code with Google.');
         }
     }
@@ -64,7 +64,7 @@ class GoogleOAuthService {
         try {
             const ticket = await this.client.verifyIdToken({ idToken, audience: config.google.GOOGLE_CLIENT_ID });
             payload = ticket.getPayload();
-        } catch (error) {
+        } catch (_error) {
             throw new BadRequest('Failed to verify Google ID token.');
         }
         if (payload.nonce !== nonce) throw new BadRequest('ID token nonce mismatch.');
