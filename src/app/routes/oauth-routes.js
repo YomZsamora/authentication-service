@@ -1,11 +1,11 @@
 const express = require('express');
-const { 
+const {
     initiateGoogleOAuthController,
-    callbackGoogleOAuthController
+    callbackGoogleOAuthController,
 } = require('../controllers/oauth-controllers');
-const { 
+const {
     initiateGoogleOAuthMiddleware,
-    callbackGoogleOAuthMiddleware
+    callbackGoogleOAuthMiddleware,
 } = require('../middlewares/oauth-middlewares');
 
 const router = express.Router();
