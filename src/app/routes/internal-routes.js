@@ -4,6 +4,10 @@ const { validatePerformersController } = require('../controllers/internal-contro
 
 const router = express.Router();
 
-router.post('/users/validate-performers', validatePerformersMiddleware, validatePerformersController);
+router.post(
+    '/users/validate-performers',
+    validatePerformersMiddleware,
+    validatePerformersController
+);
 
 module.exports = router;
