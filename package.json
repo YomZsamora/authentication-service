@@ -6,7 +6,10 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format:check": "prettier --check src/"
   },
   "keywords": [],
   "author": "",
@@ -50,9 +53,14 @@
     "uuid": "^14.0.1"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@faker-js/faker": "^9.9.0",
+    "eslint": "^10.8.1",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.11.0",
     "jest": "^30.4.2",
     "nodemon": "^3.1.14",
+    "prettier": "^3.9.6",
     "sequelize-cli": "^6.6.5",
     "supertest": "^7.2.2"
   }
