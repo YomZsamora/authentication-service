@@ -3,7 +3,6 @@ const userRepository = require('../../repositories/user-repository');
 
 const validatePerformersController = async (req, res, next) => {
     try {
-
         const { performerUserIds } = req.body;
         const users = await userRepository.findUsersByIds(performerUserIds);
         const validPerformerIds = new Set(
