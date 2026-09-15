@@ -43,12 +43,11 @@ const clearRefreshCookie = (res) => {
  * @param {Object} res - The response object used to send back the result.
  */
 const basicRegistrationController = async (req, res, next) => {
-
     try {
         const { email, password, role } = req.body;
         const user = await userRepository.registerUser({ email, password, role });
         const apiResponse = new ApiResponse();
-        apiResponse.message = "New user account created successfully.";
+        apiResponse.message = 'New user account created successfully.';
         apiResponse.data = userSerializer.serializeUser(user);
         res.status(201).json(apiResponse);
     } catch (error) {
@@ -61,7 +60,6 @@ const basicRegistrationController = async (req, res, next) => {
  * @param {Object} res - The response object used to send back the result.
  */
 const basicLoginController = async (req, res, next) => {
-
     try {
         const user = req.user;
         const { token: accessToken, expiresIn } = tokenService.signAccessToken({
@@ -70,11 +68,15 @@ const basicLoginController = async (req, res, next) => {
             role: user.role,
         });
         const { token: refreshToken, jti } = tokenService.signRefreshToken({ sub: user.id });
-        await refreshTokenRepository.revokeAllUserSessions(user.id); 
-        await refreshTokenRepository.storeRefreshToken({ jti, userId: user.id, ttlSeconds: REFRESH_TOKEN_TTL });
+        await refreshTokenRepository.revokeAllUserSessions(user.id);
+        await refreshTokenRepository.storeRefreshToken({
+            jti,
+            userId: user.id,
+            ttlSeconds: REFRESH_TOKEN_TTL,
+        });
         setRefreshCookie(res, refreshToken);
         const apiResponse = new ApiResponse();
-        apiResponse.message = "Logged in successfully.";
+        apiResponse.message = 'Logged in successfully.';
         apiResponse.data = { accessToken, tokenType: 'Bearer', expiresIn };
         res.status(200).json(apiResponse);
     } catch (error) {
@@ -87,11 +89,13 @@ const basicLoginController = async (req, res, next) => {
  * @param {Object} res - The response object used to send back the new access token.
  */
 const refreshTokenController = async (req, res, next) => {
-    
     try {
         const { sub, jti } = req.payload;
         const user = await userRepository.findUserById(sub);
-        if (!user) throw new NotFound('User account not found. Please check your credentials and try again.');
+        if (!user)
+            throw new NotFound(
+                'User account not found. Please check your credentials and try again.'
+            );
         await refreshTokenRepository.deleteByJti(jti);
         const { token: accessToken, expiresIn } = tokenService.signAccessToken({
             sub,
@@ -99,10 +103,14 @@ const refreshTokenController = async (req, res, next) => {
             role: user.role,
         });
         const { token: refreshToken, jti: newJti } = tokenService.signRefreshToken({ sub });
-        await refreshTokenRepository.storeRefreshToken({ jti: newJti, userId: sub, ttlSeconds: REFRESH_TOKEN_TTL });
+        await refreshTokenRepository.storeRefreshToken({
+            jti: newJti,
+            userId: sub,
+            ttlSeconds: REFRESH_TOKEN_TTL,
+        });
         setRefreshCookie(res, refreshToken);
         const apiResponse = new ApiResponse();
-        apiResponse.message = "Token refreshed successfully.";
+        apiResponse.message = 'Token refreshed successfully.';
         apiResponse.data = { accessToken, tokenType: 'Bearer', expiresIn };
         res.status(200).json(apiResponse);
     } catch (error) {
@@ -115,14 +123,15 @@ const refreshTokenController = async (req, res, next) => {
  * @param {Object} res - The response object used to send back the logout confirmation.
  */
 const logoutController = async (req, res, next) => {
-
     try {
         const refreshToken = req.cookies?.refresh_token;
         if (refreshToken) {
             try {
                 const payload = tokenService.verifyRefreshToken(refreshToken);
                 await refreshTokenRepository.deleteByJti(payload.jti);
-            } catch (_) { /* ignore token cleanup errors during logout */ }
+            } catch (_) {
+                /* ignore token cleanup errors during logout */
+            }
         }
         const authHeader = req.headers.authorization;
         if (authHeader?.startsWith('Bearer ')) {
@@ -131,24 +140,29 @@ const logoutController = async (req, res, next) => {
                 const payload = tokenService.verifyAccessToken(accessToken);
                 const remainingTtl = payload.exp - Math.floor(Date.now() / 1000);
                 if (remainingTtl > 0) {
-                    await tokenService.denylistToken({ jti: payload.jti, ttlSeconds: remainingTtl });
+                    await tokenService.denylistToken({
+                        jti: payload.jti,
+                        ttlSeconds: remainingTtl,
+                    });
                 }
-            } catch (_) { /* ignore token cleanup errors during logout */ }
+            } catch (_) {
+                /* ignore token cleanup errors during logout */
+            }
         }
         clearRefreshCookie(res);
         const apiResponse = new ApiResponse();
-        apiResponse.message = "Logged out successfully.";
+        apiResponse.message = 'Logged out successfully.';
         res.status(200).json(apiResponse);
     } catch (error) {
         next(error);
     }
 };
 
-module.exports = { 
-    basicRegistrationController, 
+module.exports = {
+    basicRegistrationController,
     basicLoginController,
     refreshTokenController,
     setRefreshCookie,
     clearRefreshCookie,
-    logoutController
+    logoutController,
 };
