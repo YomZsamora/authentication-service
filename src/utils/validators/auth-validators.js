@@ -41,7 +41,7 @@ const emailFieldValidator = body('email')
  * @returns {Promise<void>} - Resolves if the email is not registered, otherwise throws an error.
  */
 const emailRegisteredValidator = body('email')
-    .custom(async (email, { req }) => {
+    .custom(async (email) => {
         const user = await userRepository.userEmailExists(email);
         if (user) return Promise.reject(`${email} is already in use. Please choose a different email.`);
     });
@@ -63,7 +63,7 @@ const registrationPasswordFieldValidator = body('password')
     .not().isEmpty().withMessage('Password is required.')
     .isLength({ min: 6 }).withMessage('Password must be at least 6 characters long.')
     .isLength({ max: 25 }).withMessage('Password cannot exceed 25 characters.')
-    .matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]).{6,}$/)
+    .matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=[\]{}|;:,.<>?]).{6,}$/)
     .withMessage('Password must contain at least one digit, one lowercase letter, one uppercase letter, and one special character.');
 
 /** * Validates that the password confirmation matches the password field.
@@ -128,7 +128,7 @@ const refreshTokenCookieValidator = (req, res, next) => {
  */
 const refreshTokenExistsValidator = async (req, res, next) => {
     const payload = verifyRefreshToken(req.refreshToken);
-    const { sub, jti } = payload;
+    const { jti } = payload;
     const exists = await refreshTokenRepository.verifyJtiExists(jti);
     if (!exists) {
         clearRefreshCookie(res);
