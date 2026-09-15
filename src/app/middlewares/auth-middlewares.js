@@ -9,7 +9,7 @@ const {
     emailExistsValidator,
     verifyPasswordValidator,
     refreshTokenCookieValidator,
-    refreshTokenExistsValidator
+    refreshTokenExistsValidator,
 } = require('../../utils/validators/auth-validators');
 
 /**
@@ -24,7 +24,7 @@ const basicRegistrationMiddleware = [
     roleFieldValidator,
     registrationPasswordFieldValidator,
     passwordConfirmationFieldValidator,
-    handleBadRequests('Error occurred during registration.')
+    handleBadRequests('Error occurred during registration.'),
 ];
 
 /** * Middleware for validating basic login requests.
@@ -37,7 +37,7 @@ const basicLoginMiddleware = [
     loginPasswordFieldValidator,
     handleBadRequests('Error occurred during login.'),
     emailExistsValidator,
-    verifyPasswordValidator
+    verifyPasswordValidator,
 ];
 
 /** * Middleware for validating refresh token requests.
@@ -45,13 +45,10 @@ const basicLoginMiddleware = [
  * verifies that the refresh token exists in the database and has not been revoked,
  * and handles any errors that may occur during these checks.
  */
-const refreshTokenMiddleware = [
-    refreshTokenCookieValidator,
-    refreshTokenExistsValidator
-];
+const refreshTokenMiddleware = [refreshTokenCookieValidator, refreshTokenExistsValidator];
 
-module.exports = { 
-    basicRegistrationMiddleware, 
+module.exports = {
+    basicRegistrationMiddleware,
     basicLoginMiddleware,
-    refreshTokenMiddleware
+    refreshTokenMiddleware,
 };
