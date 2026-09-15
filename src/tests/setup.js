@@ -6,7 +6,6 @@ const { Sequelize } = require('sequelize');
 const { test } = require('../configs/config');
 
 module.exports = async () => {
-
     const adminSequelize = new Sequelize('postgres', test.username, test.password, {
         host: test.host,
         dialect: 'postgres',
@@ -15,7 +14,9 @@ module.exports = async () => {
 
     try {
         await adminSequelize.authenticate();
-        const [results] = await adminSequelize.query(`SELECT 1 FROM pg_database WHERE datname = '${test.database}'`);
+        const [results] = await adminSequelize.query(
+            `SELECT 1 FROM pg_database WHERE datname = '${test.database}'`
+        );
         if (results.length === 0) {
             await adminSequelize.query(`CREATE DATABASE "${test.database}"`);
             console.log(`Test database "${test.database}" created.`);

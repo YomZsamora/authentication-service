@@ -18,11 +18,12 @@ const REFRESH_TOKEN_TTL = Number(config.app.JWT_REFRESH_TOKEN_TTL);
  */
 const signAccessToken = ({ sub, email, role }) => {
     const jti = `jti-${randomUUID()}`;
-    const token = jwt.sign({ 
+    const token = jwt.sign(
+        {
             jti,
-            sub, 
-            email, 
-            role,  
+            sub,
+            email,
+            role,
         },
         loadPrivateKey(),
         {
@@ -42,9 +43,10 @@ const signAccessToken = ({ sub, email, role }) => {
  */
 const signRefreshToken = ({ sub }) => {
     const jti = `jti-${randomUUID()}`;
-    const token = jwt.sign({ 
-            sub, 
-            jti 
+    const token = jwt.sign(
+        {
+            sub,
+            jti,
         },
         loadPrivateKey(),
         {
@@ -114,11 +116,11 @@ const isDenylisted = async (jti) => {
     return result === 1;
 };
 
-module.exports = { 
-    signAccessToken, 
-    signRefreshToken, 
-    verifyAccessToken, 
+module.exports = {
+    signAccessToken,
+    signRefreshToken,
+    verifyAccessToken,
     verifyRefreshToken,
     denylistToken,
-    isDenylisted
+    isDenylisted,
 };

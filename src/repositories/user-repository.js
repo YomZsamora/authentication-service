@@ -18,9 +18,9 @@ const registerUser = async ({ email, password, role = 'USER' }) => {
 const findUserByEmail = async (email) => {
     return User.findOne({
         where: {
-            email: email.trim().toLowerCase()
+            email: email.trim().toLowerCase(),
         },
-        attributes: ['id', 'email', 'role']
+        attributes: ['id', 'email', 'role'],
     });
 };
 
@@ -30,7 +30,7 @@ const findUserByEmail = async (email) => {
  */
 const findUserById = async (id) => {
     return User.findByPk(id, {
-        attributes: ['id', 'email', 'role']
+        attributes: ['id', 'email', 'role'],
     });
 };
 
@@ -57,7 +57,7 @@ const userEmailExists = async (email) => {
         attributes: ['email'],
     });
     return !!user;
-}
+};
 
 const findUsersByIds = async (ids) => {
     return User.findAll({

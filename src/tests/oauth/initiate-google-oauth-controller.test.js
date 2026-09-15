@@ -7,12 +7,9 @@ const pkceService = require('../../services/pkce-service');
 const { initiateGoogleOAuthController } = require('../../app/controllers/oauth-controllers');
 
 describe('Initiate Google OAuth API - GET /v1/oauth/google', () => {
-
     describe('Success', () => {
-
         it('should return 302 and redirect to Google with all required OAuth 2.0 parameters', async () => {
-            const res = await request(app)
-                .get('/v1/oauth/google');
+            const res = await request(app).get('/v1/oauth/google');
 
             expect(res.status).toBe(302);
 
@@ -35,8 +32,7 @@ describe('Initiate Google OAuth API - GET /v1/oauth/google', () => {
         });
 
         it('should store the PKCE code verifier and nonce in Redis under the state key', async () => {
-            const res = await request(app)
-                .get('/v1/oauth/google');
+            const res = await request(app).get('/v1/oauth/google');
 
             // Extract the state from the redirect URL
             const url = new URL(res.headers.location);
@@ -53,12 +49,12 @@ describe('Initiate Google OAuth API - GET /v1/oauth/google', () => {
             // Clean up — the callback test will not use this state
             await pkceService.deleteOAuthState(state);
         });
-
     });
 
     describe('Error propagation', () => {
         it('should call next() with an error if the controller throws', async () => {
-            const spy = jest.spyOn(pkceService, 'storeOAuthState')
+            const spy = jest
+                .spyOn(pkceService, 'storeOAuthState')
                 .mockRejectedValueOnce(new Error('Redis unavailable'));
 
             const req = {};

@@ -40,14 +40,16 @@ const buildJWKS = () => {
     if (!jwks) {
         const jwk = crypto.createPublicKey(loadPublicKey()).export({ format: 'jwk' });
         jwks = {
-            keys: [{ 
-                kty: jwk.kty, 
-                use: 'sig', 
-                alg: 'RS256', 
-                kid: config.app.JWT_KEY_ID, 
-                n: jwk.n, 
-                e: jwk.e 
-            }],
+            keys: [
+                {
+                    kty: jwk.kty,
+                    use: 'sig',
+                    alg: 'RS256',
+                    kid: config.app.JWT_KEY_ID,
+                    n: jwk.n,
+                    e: jwk.e,
+                },
+            ],
         };
     }
     return jwks;

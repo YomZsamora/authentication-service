@@ -3,7 +3,6 @@ const { Sequelize } = require('sequelize');
 const { test } = require('../configs/config');
 
 module.exports = async () => {
-
     const adminSequelize = new Sequelize('postgres', test.username, test.password, {
         host: test.host,
         dialect: 'postgres',

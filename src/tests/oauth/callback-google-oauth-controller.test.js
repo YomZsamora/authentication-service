@@ -8,20 +8,20 @@ const pkceService = require('../../services/pkce-service');
 const { GoogleOAuthService } = require('../../services/google-oauth-service');
 const { callbackGoogleOAuthController } = require('../../app/controllers/oauth-controllers');
 
-const TEST_GOOGLE_SUB   = 'google-sub-callback-test';
+const TEST_GOOGLE_SUB = 'google-sub-callback-test';
 const TEST_GOOGLE_EMAIL = 'callbacktest@gmail.com';
-const TEST_STATE        = 'test-oauth-state-abc123';
-const TEST_CODE         = 'test-auth-code-xyz789';
+const TEST_STATE = 'test-oauth-state-abc123';
+const TEST_CODE = 'test-auth-code-xyz789';
 const TEST_CODE_VERIFIER = 'test-code-verifier';
-const TEST_NONCE        = 'test-nonce';
+const TEST_NONCE = 'test-nonce';
 
 describe('Google OAuth Callback API - GET /v1/oauth/google/callback', () => {
-
     let mockGoogleOAuthHandle;
 
     beforeEach(async () => {
         // Intercept Google's token exchange — no real network call
-        mockGoogleOAuthHandle = jest.spyOn(GoogleOAuthService.prototype, 'handle')
+        mockGoogleOAuthHandle = jest
+            .spyOn(GoogleOAuthService.prototype, 'handle')
             .mockResolvedValue({ sub: TEST_GOOGLE_SUB, email: TEST_GOOGLE_EMAIL });
 
         // Pre-load a valid PKCE state into Redis so verifyOAuthStateValidator passes
@@ -47,11 +47,10 @@ describe('Google OAuth Callback API - GET /v1/oauth/google/callback', () => {
     });
 
     describe('Validation', () => {
-
         it('should return 400 if state query parameter is missing', async () => {
             const res = await request(app)
                 .get('/v1/oauth/google/callback')
-                .query({ code: TEST_CODE });  // state is absent
+                .query({ code: TEST_CODE }); // state is absent
 
             expect(res.status).toBe(400);
             expect(res.body).toMatchObject({
@@ -64,7 +63,7 @@ describe('Google OAuth Callback API - GET /v1/oauth/google/callback', () => {
         it('should return 400 if code query parameter is missing', async () => {
             const res = await request(app)
                 .get('/v1/oauth/google/callback')
-                .query({ state: 'anyvalue' });  // code is absent
+                .query({ state: 'anyvalue' }); // code is absent
 
             expect(res.status).toBe(400);
             expect(res.body).toMatchObject({
@@ -86,7 +85,6 @@ describe('Google OAuth Callback API - GET /v1/oauth/google/callback', () => {
                 data: null,
             });
         });
-
     });
 
     describe('Success', () => {
@@ -111,7 +109,7 @@ describe('Google OAuth Callback API - GET /v1/oauth/google/callback', () => {
             // Refresh token also set as an HttpOnly cookie
             const setCookieHeader = res.headers['set-cookie'];
             expect(setCookieHeader).toBeDefined();
-            const refreshCookie = setCookieHeader.find(c => c.startsWith('refresh_token='));
+            const refreshCookie = setCookieHeader.find((c) => c.startsWith('refresh_token='));
             expect(refreshCookie).toBeDefined();
             expect(refreshCookie).toContain('HttpOnly');
             expect(refreshCookie).toContain('Path=/v1/auth/refresh-token');
@@ -122,7 +120,6 @@ describe('Google OAuth Callback API - GET /v1/oauth/google/callback', () => {
             expect(user.email).toBe(TEST_GOOGLE_EMAIL);
             expect(user.role).toBe('USER');
         });
-
     });
 
     describe('Error propagation', () => {
@@ -136,5 +133,4 @@ describe('Google OAuth Callback API - GET /v1/oauth/google/callback', () => {
             expect(next).toHaveBeenCalledWith(expect.any(Error));
         });
     });
-
 });

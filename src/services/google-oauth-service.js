@@ -3,13 +3,12 @@ const config = require('../configs/config');
 const { OAuth2Client } = require('google-auth-library');
 const { BadRequest } = require('../utils/exceptions/custom-exceptions');
 
-/** 
+/**
  * Service class for handling Google OAuth authentication.
  * This service provides methods to initiate the OAuth flow, exchange authorization codes for tokens,
  * and verify ID tokens received from Google.
  */
 class GoogleOAuthService {
-
     constructor() {
         this.tokenUrl = config.google.GOOGLE_TOKEN_URL;
         this.client = new OAuth2Client(config.google.GOOGLE_CLIENT_ID);
@@ -36,7 +35,6 @@ class GoogleOAuthService {
      * @returns {Promise<Object>} - An object containing the access token, ID token, and other token information.
      */
     async _exchangeCode(code, codeVerifier) {
-
         try {
             const response = await axios.post(this.tokenUrl, {
                 code,
@@ -59,10 +57,12 @@ class GoogleOAuthService {
      * @returns {Promise<Object>} - An object containing user information such as sub, email, and name.
      */
     async _verifyIdToken(idToken, nonce) {
-
         let payload;
         try {
-            const ticket = await this.client.verifyIdToken({ idToken, audience: config.google.GOOGLE_CLIENT_ID });
+            const ticket = await this.client.verifyIdToken({
+                idToken,
+                audience: config.google.GOOGLE_CLIENT_ID,
+            });
             payload = ticket.getPayload();
         } catch (_error) {
             throw new BadRequest('Failed to verify Google ID token.');

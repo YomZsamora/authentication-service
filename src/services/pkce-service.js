@@ -13,7 +13,8 @@ const generateCodeVerifier = () => crypto.randomBytes(32).toString('base64url');
  * @param {string} codeVerifier - The code verifier.
  * @returns {string} A base64url-encoded SHA256 hash of the code verifier.
  */
-const generateCodeChallenge = (codeVerifier) => crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+const generateCodeChallenge = (codeVerifier) =>
+    crypto.createHash('sha256').update(codeVerifier).digest('base64url');
 
 /**
  * Stores the OAuth state in Redis with a time-to-live (TTL).

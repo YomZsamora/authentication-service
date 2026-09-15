@@ -19,18 +19,22 @@ const createUsers = (count, role, emailPrefix) =>
 module.exports = {
     async up(queryInterface) {
         const users = [
-            ...createUsers(10, 'USER',      'user'),
-            ...createUsers(5,  'VENUE',     'venue'),
-            ...createUsers(3,  'PERFORMER', 'performer'),
-            ...createUsers(2,  'ADMIN',     'admin'),
+            ...createUsers(10, 'USER', 'user'),
+            ...createUsers(5, 'VENUE', 'venue'),
+            ...createUsers(3, 'PERFORMER', 'performer'),
+            ...createUsers(2, 'ADMIN', 'admin'),
         ];
 
         await queryInterface.bulkInsert('users', users, { ignoreDuplicates: true });
     },
 
     async down(queryInterface, Sequelize) {
-        await queryInterface.bulkDelete('users', {
-            email: { [Sequelize.Op.like]: '%@seed.local' },
-        }, {});
+        await queryInterface.bulkDelete(
+            'users',
+            {
+                email: { [Sequelize.Op.like]: '%@seed.local' },
+            },
+            {}
+        );
     },
 };

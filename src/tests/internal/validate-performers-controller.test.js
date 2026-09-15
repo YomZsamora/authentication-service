@@ -5,11 +5,10 @@ const app = require('../../index');
 const { User } = require('../../models/user');
 const { validatePerformersController } = require('../../app/controllers/internal-controllers');
 
-const TEST_PERFORMER_USER_ID     = '00000000-0000-0000-0000-000000000006';
+const TEST_PERFORMER_USER_ID = '00000000-0000-0000-0000-000000000006';
 const TEST_NON_PERFORMER_USER_ID = '00000000-0000-0000-0000-000000000007';
 
 describe('Validate Performers API - POST /v1/internal/users/validate-performers', () => {
-
     beforeAll(async () => {
         await User.create({
             id: TEST_PERFORMER_USER_ID,
@@ -30,11 +29,8 @@ describe('Validate Performers API - POST /v1/internal/users/validate-performers'
     });
 
     describe('Body Validation', () => {
-
         it('should return 400 if userIds is missing', async () => {
-            const res = await request(app)
-                .post('/v1/internal/users/validate-performers')
-                .send({});
+            const res = await request(app).post('/v1/internal/users/validate-performers').send({});
 
             expect(res.status).toBe(400);
             expect(res.body).toMatchObject({ status: 'error' });
@@ -78,7 +74,6 @@ describe('Validate Performers API - POST /v1/internal/users/validate-performers'
     });
 
     describe('Success', () => {
-
         it('should return valid: true when all IDs belong to PERFORMER users', async () => {
             const res = await request(app)
                 .post('/v1/internal/users/validate-performers')
@@ -117,7 +112,9 @@ describe('Validate Performers API - POST /v1/internal/users/validate-performers'
 
             const res = await request(app)
                 .post('/v1/internal/users/validate-performers')
-                .send({ userIds: [TEST_PERFORMER_USER_ID, TEST_NON_PERFORMER_USER_ID, nonExistentId] });
+                .send({
+                    userIds: [TEST_PERFORMER_USER_ID, TEST_NON_PERFORMER_USER_ID, nonExistentId],
+                });
 
             expect(res.status).toBe(200);
             expect(res.body.data.valid).toBe(false);
@@ -129,7 +126,6 @@ describe('Validate Performers API - POST /v1/internal/users/validate-performers'
     });
 
     describe('Error propagation', () => {
-
         it('should call next() with an error if the controller throws', async () => {
             const req = {};
             const res = {

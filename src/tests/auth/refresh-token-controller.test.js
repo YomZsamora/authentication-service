@@ -9,18 +9,16 @@ const tokenService = require('../../services/token-service');
 const { loadPrivateKey } = require('../../utils/keys');
 const { refreshTokenController } = require('../../app/controllers/auth-controllers');
 
-const TEST_EMAIL    = 'refreshtest@test.local';
+const TEST_EMAIL = 'refreshtest@test.local';
 const TEST_PASSWORD = 'TestRefresh@1';
 
 describe('Refresh Token API - POST /v1/auth/refresh-token', () => {
-
     let refreshUser;
-    let validCookie;      // from login — backed by a real DB record
-    let orphanedCookie;   // valid JWT signature, intentionally NOT stored in DB
-    let expiredCookie;    // RS256-signed JWT with expiresIn: -1
+    let validCookie; // from login — backed by a real DB record
+    let orphanedCookie; // valid JWT signature, intentionally NOT stored in DB
+    let expiredCookie; // RS256-signed JWT with expiresIn: -1
 
     beforeAll(async () => {
-
         // Create the test user
         refreshUser = await User.create({
             email: TEST_EMAIL,
@@ -62,8 +60,7 @@ describe('Refresh Token API - POST /v1/auth/refresh-token', () => {
 
     describe('Authentication', () => {
         it('should return 401 if no refresh_token cookie is provided', async () => {
-            const res = await request(app)
-                .post('/v1/auth/refresh-token');
+            const res = await request(app).post('/v1/auth/refresh-token');
 
             expect(res.status).toBe(401);
             expect(res.body).toMatchObject({
@@ -120,7 +117,7 @@ describe('Refresh Token API - POST /v1/auth/refresh-token', () => {
             // A new refresh cookie must be set
             const setCookieHeader = res.headers['set-cookie'];
             expect(setCookieHeader).toBeDefined();
-            const refreshCookie = setCookieHeader.find(c => c.startsWith('refresh_token='));
+            const refreshCookie = setCookieHeader.find((c) => c.startsWith('refresh_token='));
             expect(refreshCookie).toBeDefined();
             expect(refreshCookie).toContain('HttpOnly');
             expect(refreshCookie).toContain('Path=/v1/auth/refresh-token');
@@ -160,5 +157,4 @@ describe('Refresh Token API - POST /v1/auth/refresh-token', () => {
             expect(next).toHaveBeenCalledWith(expect.any(Error));
         });
     });
-
 });

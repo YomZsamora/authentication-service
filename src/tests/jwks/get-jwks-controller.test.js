@@ -5,10 +5,8 @@ const app = require('../../index');
 const config = require('../../configs/config');
 
 describe('JWKS API - GET /.well-known/jwks.json', () => {
-
     it('should return 200 with Content-Type application/json and a keys array', async () => {
-        const res = await request(app)
-            .get('/.well-known/jwks.json');
+        const res = await request(app).get('/.well-known/jwks.json');
 
         expect(res.status).toBe(200);
         expect(res.headers['content-type']).toMatch(/application\/json/);
@@ -18,8 +16,7 @@ describe('JWKS API - GET /.well-known/jwks.json', () => {
     });
 
     it('should return a single RSA signing key with all required JWK fields', async () => {
-        const res = await request(app)
-            .get('/.well-known/jwks.json');
+        const res = await request(app).get('/.well-known/jwks.json');
 
         const key = res.body.keys[0];
         expect(key.kty).toBe('RSA');
