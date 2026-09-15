@@ -122,7 +122,7 @@ const logoutController = async (req, res, next) => {
             try {
                 const payload = tokenService.verifyRefreshToken(refreshToken);
                 await refreshTokenRepository.deleteByJti(payload.jti);
-            } catch (_) {}
+            } catch (_) { /* ignore token cleanup errors during logout */ }
         }
         const authHeader = req.headers.authorization;
         if (authHeader?.startsWith('Bearer ')) {
@@ -133,7 +133,7 @@ const logoutController = async (req, res, next) => {
                 if (remainingTtl > 0) {
                     await tokenService.denylistToken({ jti: payload.jti, ttlSeconds: remainingTtl });
                 }
-            } catch (_) {}
+            } catch (_) { /* ignore token cleanup errors during logout */ }
         }
         clearRefreshCookie(res);
         const apiResponse = new ApiResponse();
