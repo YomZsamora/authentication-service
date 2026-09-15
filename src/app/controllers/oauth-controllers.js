@@ -7,7 +7,6 @@ const tokenService = require('../../services/token-service');
 const userRepository = require('../../repositories/user-repository');
 const refreshTokenRepository = require('../../repositories/refresh-token-repository');
 const { ApiResponse } = require('../../utils/responses');
-const { BadRequest } = require('../../utils/exceptions/custom-exceptions');
 const { setRefreshCookie } = require('./auth-controllers');
 
 const config = require('../../configs/config');
@@ -50,7 +49,7 @@ const callbackGoogleOAuthController = async (req, res, next) => {
             nonce: oauthState.nonce,
         });
         const user = await userRepository.findOrCreateGoogleUser({ googleSub, email });
-        const { token: accessToken, expiresIn } = tokenService.signAccessToken({
+        const { token: accessToken } = tokenService.signAccessToken({
             sub: user.id,
             email: user.email,
             role: user.role,
