@@ -11,7 +11,7 @@ const {
     TokenReuseDetected
 } = require('./custom-exceptions');
 
-const exceptionHandler = (err, req, res, next) => {
+const exceptionHandler = (err, req, res, _next) => {
     
     const apiResponse = new ApiResponse();
     apiResponse.status = ERROR_STATUS;
