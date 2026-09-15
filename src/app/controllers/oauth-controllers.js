@@ -20,14 +20,17 @@ const googleOAuthService = new GoogleOAuthService();
  * @param {Object} res - The response object used to redirect the user.
  */
 const initiateGoogleOAuthController = async (req, res, next) => {
-    
     try {
         const codeVerifier = pkceService.generateCodeVerifier();
         const codeChallenge = pkceService.generateCodeChallenge(codeVerifier);
         const state = pkceService.generateState();
         const nonce = pkceService.generateNonce();
         await pkceService.storeOAuthState(state, { codeVerifier, nonce });
-        const redirectUrl = googleOAuthService.buildAuthorizationUrl({ codeChallenge, state, nonce });
+        const redirectUrl = googleOAuthService.buildAuthorizationUrl({
+            codeChallenge,
+            state,
+            nonce,
+        });
         return res.redirect(redirectUrl);
     } catch (error) {
         next(error);
@@ -40,9 +43,11 @@ const initiateGoogleOAuthController = async (req, res, next) => {
  * @param {Object} res - The response object used to send back the result.
  */
 const callbackGoogleOAuthController = async (req, res, next) => {
-
     try {
-        const { query: { code }, oauthState } = req; 
+        const {
+            query: { code },
+            oauthState,
+        } = req;
         const { sub: googleSub, email } = await googleOAuthService.handle({
             code,
             codeVerifier: oauthState.codeVerifier,
@@ -54,9 +59,13 @@ const callbackGoogleOAuthController = async (req, res, next) => {
             email: user.email,
             role: user.role,
         });
-        const { token: refreshToken, jti } = tokenService.signRefreshToken({ sub: user.id, });
+        const { token: refreshToken, jti } = tokenService.signRefreshToken({ sub: user.id });
         await refreshTokenRepository.revokeAllUserSessions(user.id);
-        await refreshTokenRepository.storeRefreshToken({ jti, userId: user.id, ttlSeconds: REFRESH_TOKEN_TTL });
+        await refreshTokenRepository.storeRefreshToken({
+            jti,
+            userId: user.id,
+            ttlSeconds: REFRESH_TOKEN_TTL,
+        });
         setRefreshCookie(res, refreshToken);
         const apiResponse = new ApiResponse();
         apiResponse.message = 'Google OAuth authentication successful.';
@@ -67,7 +76,7 @@ const callbackGoogleOAuthController = async (req, res, next) => {
     }
 };
 
-module.exports = { 
+module.exports = {
     initiateGoogleOAuthController,
-    callbackGoogleOAuthController
+    callbackGoogleOAuthController,
 };
