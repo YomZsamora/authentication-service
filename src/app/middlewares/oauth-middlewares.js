@@ -1,5 +1,8 @@
 const { handleBadRequests } = require('../../utils/exceptions/exception-handler');
-const { callbackGoogleOAuthValidators, verifyOAuthStateValidator } = require('../../utils/validators/oauth-validators');
+const {
+    callbackGoogleOAuthValidators,
+    verifyOAuthStateValidator,
+} = require('../../utils/validators/oauth-validators');
 
 /** * Middleware for initiating the Google OAuth flow.
  * Currently, this middleware does not perform any specific validation or processing,
@@ -16,7 +19,7 @@ const callbackGoogleOAuthMiddleware = [
     verifyOAuthStateValidator,
 ];
 
-module.exports = { 
-    initiateGoogleOAuthMiddleware, 
-    callbackGoogleOAuthMiddleware 
+module.exports = {
+    initiateGoogleOAuthMiddleware,
+    callbackGoogleOAuthMiddleware,
 };
