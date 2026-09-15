@@ -8,10 +8,9 @@ const { basicRegistrationController } = require('../../app/controllers/auth-cont
 describe('Basic Registration API - POST /v1/auth/basic-registration', () => {
 
     let validPayload;
-    let existingUser;
 
     beforeAll(async () => {
-        existingUser = await User.create({
+        await User.create({
             email: 'existing@test.local',
             password: 'Existing@P4ss',
             role: 'USER',
