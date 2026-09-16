@@ -1,7 +1,10 @@
 require('dotenv').config();
 const { Sequelize } = require('sequelize');
+const appConfig = require('../configs/config');
+
 const env = process.env.NODE_ENV || 'development';
-const config = require('../configs/config')[env];
+const config = appConfig[env];
+const logger = require('pino')({ level: appConfig.app.LOG_LEVEL });
 
 if (!config) throw new Error(`No configuration found for environment: ${env}`);
 if (!config.database || !config.username || !config.password || !config.host)
@@ -10,11 +13,12 @@ if (!config.database || !config.username || !config.password || !config.host)
 const sequelize = new Sequelize(config.database, config.username, config.password, {
     host: config.host,
     dialect: config.dialect,
+    logging: false,
 });
 
 sequelize
     .authenticate()
-    .then(() => console.log('Database has been connected successfully.'))
-    .catch((err) => console.log('Error: ' + err));
+    .then(() => logger.info('Database connected successfully'))
+    .catch((err) => logger.error({ error: err.message }, 'Database connection error'));
 
 module.exports = sequelize;
