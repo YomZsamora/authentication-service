@@ -1,5 +1,7 @@
 const { validationResult } = require('express-validator');
 const { ApiResponse, ERROR_STATUS } = require('../responses');
+const config = require('../../configs/config');
+const logger = require('pino')({ level: config.app.LOG_LEVEL });
 const {
     BadRequest,
     NotFound,
@@ -57,6 +59,12 @@ const exceptionHandler = (err, req, res, _next) => {
     if (err instanceof TokenReuseDetected) {
         statusCode = err.statusCode;
         apiResponse.message = err.message;
+    }
+
+    if (statusCode >= 500) {
+        logger.error({ statusCode, error: err.message, stack: err.stack, path: req.path }, 'Unexpected error');
+    } else {
+        logger.warn({ statusCode, error: err.message, path: req.path }, 'Operational error');
     }
 
     return res.status(statusCode).json(apiResponse);
