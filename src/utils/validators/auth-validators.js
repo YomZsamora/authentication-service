@@ -109,7 +109,7 @@ const loginPasswordFieldValidator = body('password')
  */
 const emailExistsValidator = (req, res, next) => {
     return body('email').custom(async (email, { req }) => {
-        const user = await userRepository.findUserByEmail(email);
+        const user = await userRepository.findUserByEmailForAuth(email);
         if (!user)
             return next(
                 new NotFound('User account not found. Please check your email and try again.')
@@ -124,12 +124,10 @@ const emailExistsValidator = (req, res, next) => {
  * @returns {Promise<void>} - Resolves if the password is valid, otherwise throws an error.
  */
 const verifyPasswordValidator = (req, res, next) => {
-    return body('password').custom((password, { req }) => {
-        const user = req.user;
-        if (!user.isValidPassword(password))
-            return next(new BadRequest('Invalid password. Please try again.'));
-        return true;
-    })(req, res, next);
+    const { password } = req.body;
+    const user = req.user;
+    if (!user.isValidPassword(password)) return next(new BadRequest('Invalid password. Please try again.'));
+    next();
 };
 
 /** * Validates that the refresh token cookie is present on the request.
