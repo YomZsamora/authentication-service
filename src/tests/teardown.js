@@ -1,27 +1,17 @@
-'use strict';
-const { Sequelize } = require('sequelize');
-const { test } = require('../configs/config');
+require('dotenv').config();
+const { Client } = require('pg');
 
 module.exports = async () => {
-    const adminSequelize = new Sequelize('postgres', test.username, test.password, {
-        host: test.host,
-        dialect: 'postgres',
-        logging: false,
+    const client = new Client({
+        host: process.env.POSTGRES_HOST,
+        port: process.env.POSTGRES_PORT || 5432,
+        user: process.env.POSTGRES_USER,
+        password: process.env.POSTGRES_PASSWORD,
+        database: 'postgres',
     });
 
-    try {
-        await adminSequelize.authenticate();
-        await adminSequelize.query(`
-            SELECT pg_terminate_backend(pg_stat_activity.pid)
-            FROM pg_stat_activity
-            WHERE pg_stat_activity.datname = '${test.database}'
-            AND pid <> pg_backend_pid()
-        `);
-        await adminSequelize.query(`DROP DATABASE IF EXISTS "${test.database}"`);
-        console.log(`Test database "${test.database}" dropped.`);
-    } catch (error) {
-        console.error('Error during teardown:', error);
-    } finally {
-        await adminSequelize.close();
-    }
+    await client.connect();
+    const dbName = process.env.POSTGRES_DATABASE_TEST;
+    await client.query(`DROP DATABASE IF EXISTS "${dbName}"`);
+    await client.end();
 };
