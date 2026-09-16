@@ -18,6 +18,7 @@ module.exports = {
         dialect: 'postgres',
     },
     app: {
+        LOG_LEVEL: process.env.LOG_LEVEL || 'info',
         REDIS_URL: process.env.REDIS_URL,
         JWT_PRIVATE_KEY_PATH: process.env.JWT_PRIVATE_KEY_PATH,
         JWT_PUBLIC_KEY_PATH: process.env.JWT_PUBLIC_KEY_PATH,
