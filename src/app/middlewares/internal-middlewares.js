@@ -3,9 +3,7 @@ const { performerUserIdsValidator } = require('../../utils/validators/internal-v
 
 const validatePerformersMiddleware = [
     performerUserIdsValidator,
-    handleBadRequests(
-        'Performer user IDs validation failed. Please check the request body and try again.'
-    ),
+    handleBadRequests('Performer user IDs validation failed. Please check the request body and try again.'),
 ];
 
 module.exports = { validatePerformersMiddleware };

@@ -17,18 +17,14 @@ const registerUser = async ({ email, password, role = 'USER' }) => {
  */
 const findUserByEmail = async (email) => {
     return User.findOne({
-        where: {
-            email: email.trim().toLowerCase(),
-        },
+        where: { email: email.trim().toLowerCase() },
         attributes: ['id', 'email', 'role'],
     });
 };
 
 const findUserByEmailForAuth = async (email) => {
     return User.findOne({
-        where: {
-            email: email.trim().toLowerCase(),
-        },
+        where: { email: email.trim().toLowerCase() },
         attributes: ['id', 'email', 'password', 'role'],
     });
 };
