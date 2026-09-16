@@ -24,6 +24,15 @@ const findUserByEmail = async (email) => {
     });
 };
 
+const findUserByEmailForAuth = async (email) => {
+    return User.findOne({
+        where: {
+            email: email.trim().toLowerCase(),
+        },
+        attributes: ['id', 'email', 'password', 'role'],
+    });
+};
+
 /** * Finds a user by their unique identifier (ID).
  * @param {string} id - The unique identifier of the user to find.
  * @returns {Promise<Object|null>} - The found user object or null if not found.
@@ -69,6 +78,7 @@ const findUsersByIds = async (ids) => {
 module.exports = {
     registerUser,
     findUserByEmail,
+    findUserByEmailForAuth,
     findUserById,
     findOrCreateGoogleUser,
     userEmailExists,
