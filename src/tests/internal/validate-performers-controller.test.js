@@ -2,11 +2,12 @@
 
 const request = require('supertest');
 const app = require('../../index');
+const { faker } = require('@faker-js/faker');
 const { User } = require('../../models/user');
 const { validatePerformersController } = require('../../app/controllers/internal-controllers');
 
-const TEST_PERFORMER_USER_ID = '00000000-0000-0000-0000-000000000006';
-const TEST_NON_PERFORMER_USER_ID = '00000000-0000-0000-0000-000000000007';
+const TEST_PERFORMER_USER_ID = faker.string.uuid();
+const TEST_NON_PERFORMER_USER_ID = faker.string.uuid();
 
 describe('Validate Performers API - POST /v1/internal/users/validate-performers', () => {
     beforeAll(async () => {
@@ -39,7 +40,7 @@ describe('Validate Performers API - POST /v1/internal/users/validate-performers'
         it('should return 400 if userIds is not an array', async () => {
             const res = await request(app)
                 .post('/v1/internal/users/validate-performers')
-                .send({ userIds: 'not-an-array' });
+                .send({ performerUserIds: 'not-an-array' });
 
             expect(res.status).toBe(400);
             expect(res.body).toMatchObject({ status: 'error' });
@@ -48,7 +49,7 @@ describe('Validate Performers API - POST /v1/internal/users/validate-performers'
         it('should return 400 if userIds is an empty array', async () => {
             const res = await request(app)
                 .post('/v1/internal/users/validate-performers')
-                .send({ userIds: [] });
+                .send({ performerUserIds: [] });
 
             expect(res.status).toBe(400);
             expect(res.body).toMatchObject({ status: 'error' });
@@ -57,7 +58,7 @@ describe('Validate Performers API - POST /v1/internal/users/validate-performers'
         it('should return 400 if userIds contains invalid UUIDs', async () => {
             const res = await request(app)
                 .post('/v1/internal/users/validate-performers')
-                .send({ userIds: ['not-a-uuid', TEST_PERFORMER_USER_ID] });
+                .send({ performerUserIds: ['not-a-uuid', TEST_PERFORMER_USER_ID] });
 
             expect(res.status).toBe(400);
             expect(res.body).toMatchObject({ status: 'error' });
@@ -66,7 +67,7 @@ describe('Validate Performers API - POST /v1/internal/users/validate-performers'
         it('should return 400 if userIds contains duplicates', async () => {
             const res = await request(app)
                 .post('/v1/internal/users/validate-performers')
-                .send({ userIds: [TEST_PERFORMER_USER_ID, TEST_PERFORMER_USER_ID] });
+                .send({ performerUserIds: [TEST_PERFORMER_USER_ID, TEST_PERFORMER_USER_ID] });
 
             expect(res.status).toBe(400);
             expect(res.body).toMatchObject({ status: 'error' });
@@ -77,8 +78,8 @@ describe('Validate Performers API - POST /v1/internal/users/validate-performers'
         it('should return valid: true when all IDs belong to PERFORMER users', async () => {
             const res = await request(app)
                 .post('/v1/internal/users/validate-performers')
-                .send({ userIds: [TEST_PERFORMER_USER_ID] });
-
+                .send({ performerUserIds: [TEST_PERFORMER_USER_ID] });
+            
             expect(res.status).toBe(200);
             expect(res.body.status).toBe('success');
             expect(res.body.data.valid).toBe(true);
@@ -90,7 +91,7 @@ describe('Validate Performers API - POST /v1/internal/users/validate-performers'
 
             const res = await request(app)
                 .post('/v1/internal/users/validate-performers')
-                .send({ userIds: [nonExistentId] });
+                .send({ performerUserIds: [nonExistentId] });
 
             expect(res.status).toBe(200);
             expect(res.body.data.valid).toBe(false);
@@ -100,8 +101,8 @@ describe('Validate Performers API - POST /v1/internal/users/validate-performers'
         it('should return valid: false with invalidIds when a user exists but is not a PERFORMER', async () => {
             const res = await request(app)
                 .post('/v1/internal/users/validate-performers')
-                .send({ userIds: [TEST_NON_PERFORMER_USER_ID] });
-
+                .send({ performerUserIds: [TEST_NON_PERFORMER_USER_ID] });
+                
             expect(res.status).toBe(200);
             expect(res.body.data.valid).toBe(false);
             expect(res.body.data.invalidIds).toContain(TEST_NON_PERFORMER_USER_ID);
@@ -113,7 +114,7 @@ describe('Validate Performers API - POST /v1/internal/users/validate-performers'
             const res = await request(app)
                 .post('/v1/internal/users/validate-performers')
                 .send({
-                    userIds: [TEST_PERFORMER_USER_ID, TEST_NON_PERFORMER_USER_ID, nonExistentId],
+                    performerUserIds: [TEST_PERFORMER_USER_ID, TEST_NON_PERFORMER_USER_ID, nonExistentId],
                 });
 
             expect(res.status).toBe(200);
