@@ -274,7 +274,7 @@ The public key is published at `/.well-known/jwks.json` as a JSON Web Key Set. D
 }
 ```
 
-The `kid` (key ID) field is the link between a token's header and the correct key in the set — if the service ever rotates keys, both old and new can coexist in the JWKS during a transition window. Downstream services check the token's `kid` header claim, find the matching key in the JWKS, and verify the signature using the `n` (modulus) and `e` (exponent) parameters. This verification adds **zero network latency** to downstream requests — no call back to this service is needed.
+The `kid` (key ID) field is the link between a token's header and the correct key in the set. If the service ever rotates keys, both old and new can coexist in the JWKS during a transition window. Downstream services check the token's `kid` header claim, find the matching key in the JWKS, and verify the signature using the `n` (modulus) and `e` (exponent) parameters. This verification adds **zero network latency** to downstream requests — no call back to this service is needed.
 
 Access tokens carry `sub` (user ID), `email`, `role`, `jti` (a unique token identifier), `iss`, `aud`, and `exp`. Refresh tokens carry only `sub` and `jti` — they are not intended for downstream consumption, only for rotating sessions here.
 
@@ -296,7 +296,7 @@ Refresh tokens are the long-lived credential that allows users to stay logged in
 
 After the swap, the old refresh token is permanently invalid. Any subsequent attempt to use it fails at step 1.
 
-**Reuse detection** is what happens when that attempt occurs. If a refresh token whose `jti` is not in the database is presented to `/v1/auth/refresh-token`, the middleware does not just reject the request — it calls `revokeAllUserSessions(userId)`, which deletes **every** `refresh_tokens` row for that user in a single statement. This forces a full logout across all devices.
+**Reuse detection** is what happens when that attempt occurs. If a refresh token whose `jti` is not in the database is presented to `/v1/auth/refresh-token`, the middleware does not just reject the request. It calls `revokeAllUserSessions(userId)`, which deletes **every** `refresh_tokens` row for that user in a single statement. This forces a full logout across all devices.
 
 The logic behind this response is that a legitimately-rotating client would never present an old token. If an old token arrives, one of two things happened: the attacker got the token before the client rotated it, or the attacker rotated it before the legitimate client could. Either way, there is a real or potential session theft in progress. Revoking all sessions is the conservative, correct response — it forces the real user to log in again and immediately kills any attacker-held session.
 
@@ -308,7 +308,7 @@ The refresh token cookie is scoped to `path: '/v1/auth/refresh-token'` — the b
 
 ### Redis-backed access token denylist
 
-Access tokens are stateless by design — the server holds no record of them. That makes logout tricky: even after a user calls `/v1/auth/logout`, a stolen access token remains valid until it expires naturally.
+Access tokens are stateless by design. The server holds no record of them. That makes logout tricky: even after a user calls `/v1/auth/logout`, a stolen access token remains valid until it expires naturally.
 
 The denylist solves this without making access tokens stateful. On logout, the service:
 
