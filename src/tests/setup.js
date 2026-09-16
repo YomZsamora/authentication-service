@@ -1,40 +1,26 @@
-'use strict';
-const util = require('util');
-const { exec } = require('child_process');
-const execPromise = util.promisify(exec);
-const { Sequelize } = require('sequelize');
-const { test } = require('../configs/config');
+require('dotenv').config();
+const { Client } = require('pg');
+const { execSync } = require('child_process');
 
 module.exports = async () => {
-    const adminSequelize = new Sequelize('postgres', test.username, test.password, {
-        host: test.host,
-        dialect: 'postgres',
-        logging: false,
+    const client = new Client({
+        host: process.env.POSTGRES_HOST,
+        port: process.env.POSTGRES_PORT || 5432,
+        user: process.env.POSTGRES_USER,
+        password: process.env.POSTGRES_PASSWORD,
+        database: 'postgres',
     });
 
-    try {
-        await adminSequelize.authenticate();
-        const [results] = await adminSequelize.query(
-            `SELECT 1 FROM pg_database WHERE datname = '${test.database}'`
-        );
-        if (results.length === 0) {
-            await adminSequelize.query(`CREATE DATABASE "${test.database}"`);
-            console.log(`Test database "${test.database}" created.`);
-        } else {
-            console.log(`Test database "${test.database}" already exists. Skipping creation.`);
-        }
-    } catch (error) {
-        console.error('Error during test database setup:', error);
-        throw error;
-    } finally {
-        await adminSequelize.close();
+    await client.connect();
+    const dbName = process.env.POSTGRES_DATABASE_TEST;
+    const result = await client.query(`SELECT 1 FROM pg_database WHERE datname = $1`, [dbName]);
+    if (result.rowCount === 0) {
+        await client.query(`CREATE DATABASE "${dbName}"`);
     }
+    await client.end();
 
-    try {
-        const { stdout } = await execPromise('NODE_ENV=test npx sequelize-cli db:migrate');
-        console.log('Migrations completed:', stdout);
-    } catch (error) {
-        console.error('Migration error:', error.stderr);
-        throw error;
-    }
+    execSync('npx sequelize-cli db:migrate', {
+        env: { ...process.env, NODE_ENV: 'test' },
+        stdio: 'inherit',
+    });
 };
