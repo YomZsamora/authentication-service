@@ -27,6 +27,8 @@ module.exports = {
         JWT_KEY_ID: process.env.JWT_KEY_ID,
         JWT_ACCESS_TOKEN_TTL: process.env.JWT_ACCESS_TOKEN_TTL,
         JWT_REFRESH_TOKEN_TTL: process.env.JWT_REFRESH_TOKEN_TTL,
+        AMQP_URL: process.env.AMQP_URL,
+        EXCHANGE_NAME: process.env.EXCHANGE_NAME || 'app.events',
     },
     google: {
         GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
