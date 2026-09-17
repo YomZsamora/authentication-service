@@ -14,6 +14,7 @@ A standalone identity microservice built with Node.js and Express. It handles us
 - **Google OAuth 2.0 + PKCE + OIDC** — Authorization Code flow with a cryptographically generated code verifier/challenge, `state` for CSRF protection, `nonce` for replay protection, and ID token verification via `google-auth-library`; supports account linking between email/password and Google identities
 - **Strict email validation** — rejects typo TLDs, suspicious domain patterns, and repeated subdomain segments before touching the database
 - **Internal performer validation** — an unversioned internal route for downstream services to validate a list of user IDs against the user store
+- **Event publishing** — publishes a `user.registered` event to RabbitMQ after every successful basic registration; the notifications service consumes this event and sends a welcome email
 - **Structured logging** — Pino JSON logs at every lifecycle event; no `console.log` in production paths
 
 ---
@@ -76,6 +77,7 @@ A standalone identity microservice built with Node.js and Express. It handles us
 - Node.js 20+ (LTS)
 - PostgreSQL 15+
 - Redis 7+
+- RabbitMQ 3.12+ (on the `dev-infra` Docker network — used for event publishing)
 - An RS256 key pair (private key for signing, public key for verification — see Local Setup)
 - A Google Cloud Console OAuth 2.0 application (for Google login)
 
@@ -98,7 +100,8 @@ A standalone identity microservice built with Node.js and Express. It handles us
 | HTTP client            | axios ^1.18                        |
 | Password hashing       | bcryptjs ^3                        |
 | Validation             | express-validator ^7.3             |
-| ID generation          | uuid ^14                           |
+| ID generation          | crypto (Node built-in `randomUUID`) |
+| Message broker client  | amqplib ^2                         |
 | Cookies                | cookie-parser ^1.4                 |
 | Logging                | pino ^10                           |
 | Environment config     | dotenv ^17                         |
@@ -147,6 +150,10 @@ GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 GOOGLE_CALLBACK_URL=http://localhost:3000/v1/oauth/google/callback
 GOOGLE_TOKEN_URL=https://oauth2.googleapis.com/token
+
+# RabbitMQ (event publishing)
+AMQP_URL=amqp://guest:password@rabbitmq-dev:5672
+EXCHANGE_NAME=app.events
 ```
 
 ---
@@ -370,6 +377,54 @@ The `handleBadRequests` step is the boundary between field-level validation (thi
 `emailExistsValidator` and `verifyPasswordValidator` run as plain Express middleware rather than `express-validator` chains because they need to call `next(error)` directly. The user record loaded by `emailExistsValidator` is attached to `req.user` and passed forward — the controller reads it without querying the database again.
 
 Password verification uses `bcrypt.compare` via `user.isValidPassword(password)`, a method attached directly to the `User` model instance. The controller never handles raw passwords; the middleware handles all credential verification before the controller is reached.
+
+---
+
+
+
+### Event publishing after registration
+
+When a user registers successfully via `/v1/auth/basic-registration`, the controller publishes a `user.registered` event to RabbitMQ before sending the HTTP response. This triggers a welcome email from the notifications service.
+
+**Why RabbitMQ instead of a direct HTTP call?**
+
+The auth service does not call the notifications service directly. Instead it publishes a message to a shared message broker. This keeps the two services loosely coupled — neither imports nor calls the other. If the notifications service is temporarily down, the message queues up in RabbitMQ and is delivered when the service comes back. No events are lost and no retry logic is needed in the auth service.
+
+**The event envelope**
+
+Every message published to the `app.events` exchange follows this contract:
+
+```json
+{
+  "eventId":   "<uuid-v4>",
+  "eventType": "user.registered",
+  "timestamp": "<ISO 8601 datetime>",
+  "payload": {
+    "email": "user@example.com",
+    "name":  "user"
+  }
+}
+```
+
+`eventId` is a UUID generated at publish time. The notifications service uses it as an idempotency key — if the same `eventId` arrives twice (e.g. after a retry), the second message is discarded without sending a duplicate email.
+
+**How the connection is managed**
+
+`src/configs/rabbitmq.js` opens the AMQP connection and channel once at startup and caches both. `connect()` is called in `src/index.js` without `await`, so the HTTP server starts immediately regardless of RabbitMQ's availability. If the connection drops, an exponential backoff reconnect runs automatically (delays: 1s, 2s, 4s, 8s, 16s). After five failed attempts the process exits and the container orchestrator restarts it.
+
+Unlike the notifications service, the auth service does **not** assert RabbitMQ topology (exchanges, queues, bindings). Topology is owned by the notifications service. The auth service only needs to know the exchange name (`EXCHANGE_NAME`).
+
+**Best-effort delivery**
+
+If the RabbitMQ channel is unavailable when a registration request arrives, `publishEvent` logs a warning and returns — it does not throw. The registration succeeds and the user receives a 201 response. A missed welcome email is an acceptable operational outcome; a failed registration is not. This is intentional and is the correct behaviour for a non-critical side effect.
+
+**Files involved**
+
+| File | Responsibility |
+|---|---|
+| `src/configs/rabbitmq.js` | AMQP connection + channel management, reconnect logic |
+| `src/events/publisher.js` | Builds the event envelope and publishes to the exchange |
+| `src/app/controllers/auth-controllers.js` | Calls `publisher.publishEvent` after `userRepository.registerUser` |
 
 ---
 
