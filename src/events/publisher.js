@@ -1,4 +1,4 @@
-const { v4: uuidv4 } = require('uuid');
+const { randomUUID } = require('crypto');
 const config = require('../configs/config');
 const { getChannel } = require('../configs/rabbitmq');
 const logger = require('pino')({ level: config.app.LOG_LEVEL });
@@ -13,7 +13,7 @@ const publishEvent = async (eventType, routingKey, payload) => {
     }
 
     const message = {
-        eventId: uuidv4(),
+        eventId: randomUUID(),
         eventType,
         timestamp: new Date().toISOString(),
         payload,
