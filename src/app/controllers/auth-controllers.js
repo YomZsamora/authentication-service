@@ -7,6 +7,7 @@ const refreshTokenRepository = require('../../repositories/refresh-token-reposit
 const userSerializer = require('../../utils/serializers/user-serializer');
 const tokenService = require('../../services/token-service');
 const { NotFound } = require('../../utils/exceptions/custom-exceptions');
+const publisher = require('../../events/publisher');
 
 const config = require('../../configs/config');
 const REFRESH_TOKEN_TTL = Number(config.app.JWT_REFRESH_TOKEN_TTL);
@@ -46,6 +47,10 @@ const basicRegistrationController = async (req, res, next) => {
     try {
         const { email, password, role } = req.body;
         const user = await userRepository.registerUser({ email, password, role });
+        await publisher.publishEvent('user.registered', 'user.registered', {
+            email: user.email,
+            name: user.email.split('@')[0],
+        });
         const apiResponse = new ApiResponse();
         apiResponse.message = 'New user account created successfully.';
         apiResponse.data = userSerializer.serializeUser(user);

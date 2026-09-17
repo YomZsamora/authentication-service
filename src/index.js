@@ -3,6 +3,7 @@ require('./configs/sequelize');
 const express = require('express');
 const config = require('./configs/config');
 const cookieParser = require('cookie-parser');
+const { connect } = require('./configs/rabbitmq');
 const jwksRoutes = require('./app/routes/jwks-routes');
 const authRoutes = require('./app/routes/auth-routes');
 const oauthRoutes = require('./app/routes/oauth-routes');
@@ -25,6 +26,7 @@ app.use('/v1/internal', internalRoutes);
 app.use(exceptionHandler);
 
 if (require.main === module) {
+    connect();
     app.listen(PORT, () => {
         logger.info({ port: PORT }, 'Authentication service started');
     });
