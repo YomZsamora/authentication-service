@@ -8,7 +8,7 @@ const jwksRoutes = require('./app/routes/jwks-routes');
 const authRoutes = require('./app/routes/auth-routes');
 const oauthRoutes = require('./app/routes/oauth-routes');
 const internalRoutes = require('./app/routes/internal-routes');
-const logger = require('pino')({ level: config.app.LOG_LEVEL });
+const logger = require('./configs/logger');
 const { health } = require('./app/controllers/health-controller');
 const { exceptionHandler } = require('./utils/exceptions/exception-handler');
 
