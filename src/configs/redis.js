@@ -1,6 +1,6 @@
 const Redis = require('ioredis');
 const config = require('./config');
-const logger = require('pino')({ level: config.app.LOG_LEVEL });
+const logger = require('./logger');
 
 const env = process.env.NODE_ENV || 'development';
 const redis = new Redis(config.app.REDIS_URL || 'redis://localhost:6379');
