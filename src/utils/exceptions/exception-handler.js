@@ -1,7 +1,6 @@
 const { validationResult } = require('express-validator');
 const { ApiResponse, ERROR_STATUS } = require('../responses');
-const config = require('../../configs/config');
-const logger = require('pino')({ level: config.app.LOG_LEVEL });
+const logger = require('../../configs/logger');
 const {
     BadRequest,
     NotFound,
