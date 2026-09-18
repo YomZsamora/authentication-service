@@ -1,6 +1,6 @@
 const amqp = require('amqplib');
 const config = require('./config');
-const logger = require('pino')({ level: config.app.LOG_LEVEL });
+const logger = require('./logger');
 
 const RECONNECT_DELAYS_MS = [1000, 2000, 4000, 8000, 16000];
 
