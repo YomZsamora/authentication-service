@@ -1,7 +1,7 @@
 const { randomUUID } = require('crypto');
 const config = require('../configs/config');
 const { getChannel } = require('../configs/rabbitmq');
-const logger = require('pino')({ level: config.app.LOG_LEVEL });
+const logger = require('../configs/logger');
 
 const publishEvent = async (eventType, routingKey, payload) => {
     
