@@ -1,7 +1,7 @@
 const { randomUUID } = require('crypto');
 const config = require('../configs/config');
 const { getChannel } = require('../configs/rabbitmq');
-const logger = require('../configs/logger');
+const logger = require('../utils/logger');
 
 const publishEvent = async (eventType, routingKey, payload) => {
     
