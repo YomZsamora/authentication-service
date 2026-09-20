@@ -75,7 +75,7 @@ describe('Basic Login API - POST /v1/auth/basic-login', () => {
         const res = await request(app)
             .post('/v1/auth/basic-login')
             .send(validPayload);
-        console.log(res.body);
+        
         expect(res.status).toBe(400);
         expect(res.body).toMatchObject({
             status: 'error',
