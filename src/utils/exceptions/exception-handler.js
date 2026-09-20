@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator');
 const { ApiResponse, ERROR_STATUS } = require('../responses');
-const logger = require('../../configs/logger');
+const logger = require('../logger');
 const {
     BadRequest,
     NotFound,
