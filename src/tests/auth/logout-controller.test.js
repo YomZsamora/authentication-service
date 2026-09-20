@@ -2,14 +2,15 @@
 
 const request = require('supertest');
 const app = require('../../index');
+const { faker } = require('@faker-js/faker');
 const { User } = require('../../models/user');
 const { RefreshToken } = require('../../models/refresh-token');
 const tokenService = require('../../services/token-service');
 const refreshTokenRepository = require('../../repositories/refresh-token-repository');
 const { logoutController } = require('../../app/controllers/auth-controllers');
 
-const TEST_EMAIL = 'logouttest@test.local';
-const TEST_PASSWORD = 'TestLogout@1';
+const TEST_EMAIL = faker.internet.email();
+const TEST_PASSWORD = faker.internet.password({ length: 15 });
 
 describe('Logout API - POST /v1/auth/logout', () => {
     let logoutUser;
