@@ -4,7 +4,6 @@ const { getChannel } = require('../configs/rabbitmq');
 const logger = require('../utils/logger');
 
 const publishEvent = async (eventType, routingKey, payload) => {
-    
     const channel = getChannel();
 
     if (!channel) {
@@ -20,9 +19,9 @@ const publishEvent = async (eventType, routingKey, payload) => {
     };
 
     channel.publish(
-        config.app.EXCHANGE_NAME,
-        routingKey,
-        Buffer.from(JSON.stringify(message)),
+        config.app.EXCHANGE_NAME, 
+        routingKey, 
+        Buffer.from(JSON.stringify(message)), 
         { persistent: true }
     );
 
