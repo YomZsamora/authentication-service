@@ -9,13 +9,11 @@ const validatePerformersController = async (req, res, next) => {
             users.filter((u) => u.role === 'PERFORMER').map((u) => u.id)
         );
         const invalidIds = performerUserIds.filter((id) => !validPerformerIds.has(id));
-        const apiResponse = new ApiResponse();
-        apiResponse.message = 'Performers validated successfully.';
-        apiResponse.data = {
+        const apiResponse = new ApiResponse(200, 'Performers validated successfully.', {
             valid: invalidIds.length === 0,
             invalidIds,
-        };
-        return res.status(200).json(apiResponse);
+        });
+        return res.status(apiResponse.statusCode).json(apiResponse);
     } catch (error) {
         next(error);
     }
