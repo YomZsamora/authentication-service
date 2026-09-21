@@ -5,7 +5,6 @@ const sequelize = require('../../configs/sequelize');
 const { ApiResponse } = require('../../utils/responses');
 
 const health = async (req, res, next) => {
-    
     try {
         let dbStatus = 'connected';
         let redisStatus = 'connected';
@@ -16,10 +15,11 @@ const health = async (req, res, next) => {
         }
 
         if (redis.status !== 'ready') redisStatus = 'disconnected';
-        const apiResponse = new ApiResponse();
-        apiResponse.message = 'Authentication service is running';
-        apiResponse.data = { db: dbStatus, redis: redisStatus };
-        return res.status(200).json(apiResponse);
+        const apiResponse = new ApiResponse(200, 'Authentication service is running', {
+            db: dbStatus,
+            redis: redisStatus,
+        });
+        return res.status(apiResponse.statusCode).json(apiResponse);
     } catch (err) {
         next(err);
     }
