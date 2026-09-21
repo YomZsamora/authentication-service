@@ -12,10 +12,7 @@ const exceptionHandler = (err, req, res, _next) => {
     apiResponse.status = 'error';
 
     if (statusCode >= 500) {
-        logger.error(
-            { statusCode, error: err.message, stack: err.stack, path: req.path },
-            'Unexpected error'
-        );
+        logger.error({ statusCode, error: err.message, stack: err.stack, path: req.path }, 'Unexpected error');
     } else {
         logger.warn({ statusCode, error: err.message, path: req.path }, 'Operational error');
     }
