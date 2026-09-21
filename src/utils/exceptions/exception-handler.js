@@ -1,67 +1,21 @@
 const { validationResult } = require('express-validator');
-const { ApiResponse, ERROR_STATUS } = require('../responses');
+const { ApiResponse } = require('../responses');
 const logger = require('../logger');
-const {
-    BadRequest,
-    NotFound,
-    NotAuthenticated,
-    PermissionDenied,
-    UnprocessedEntity,
-    TokenExpired,
-    InvalidJsonWebToken,
-    TokenReuseDetected,
-} = require('./custom-exceptions');
+const { BadRequest, NotFound } = require('./custom-exceptions');
 
 const exceptionHandler = (err, req, res, _next) => {
-    const apiResponse = new ApiResponse();
-    apiResponse.status = ERROR_STATUS;
-    apiResponse.message = err.message || 'Internal Server Error';
-    apiResponse.data = err.errors || {};
-    let statusCode = err.statusCode || 500;
+    const statusCode = err.statusCode || 500;
+    const message = err.message || 'Internal Server Error';
+    const data = err.errors || {};
 
-    if (err instanceof BadRequest) {
-        statusCode = err.statusCode;
-        apiResponse.message = err.message;
-        apiResponse.data = err.errors;
-    }
-
-    if (err instanceof NotFound) {
-        statusCode = err.statusCode;
-        apiResponse.message = err.message;
-    }
-
-    if (err instanceof NotAuthenticated) {
-        statusCode = err.statusCode;
-        apiResponse.message = err.message;
-    }
-
-    if (err instanceof PermissionDenied) {
-        statusCode = err.statusCode;
-        apiResponse.message = err.message;
-    }
-
-    if (err instanceof UnprocessedEntity) {
-        statusCode = err.statusCode;
-        apiResponse.message = err.message;
-    }
-
-    if (err instanceof TokenExpired) {
-        statusCode = err.statusCode;
-        apiResponse.message = err.message;
-    }
-
-    if (err instanceof InvalidJsonWebToken) {
-        statusCode = err.statusCode;
-        apiResponse.message = err.message;
-    }
-
-    if (err instanceof TokenReuseDetected) {
-        statusCode = err.statusCode;
-        apiResponse.message = err.message;
-    }
+    const apiResponse = new ApiResponse(statusCode, message, data);
+    apiResponse.status = 'error';
 
     if (statusCode >= 500) {
-        logger.error({ statusCode, error: err.message, stack: err.stack, path: req.path }, 'Unexpected error');
+        logger.error(
+            { statusCode, error: err.message, stack: err.stack, path: req.path },
+            'Unexpected error'
+        );
     } else {
         logger.warn({ statusCode, error: err.message, path: req.path }, 'Operational error');
     }
