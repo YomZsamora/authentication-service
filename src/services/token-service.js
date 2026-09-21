@@ -18,22 +18,13 @@ const REFRESH_TOKEN_TTL = Number(config.app.JWT_REFRESH_TOKEN_TTL);
  */
 const signAccessToken = ({ sub, email, role }) => {
     const jti = `jti-${randomUUID()}`;
-    const token = jwt.sign(
-        {
-            jti,
-            sub,
-            email,
-            role,
-        },
-        loadPrivateKey(),
-        {
-            algorithm: 'RS256',
-            expiresIn: ACCESS_TOKEN_TTL,
-            keyid: config.app.JWT_KEY_ID,
-            issuer: config.app.JWT_ISSUER,
-            audience: config.app.JWT_AUDIENCE,
-        }
-    );
+    const token = jwt.sign({ jti, sub, email, role }, loadPrivateKey(), {
+        algorithm: 'RS256',
+        expiresIn: ACCESS_TOKEN_TTL,
+        keyid: config.app.JWT_KEY_ID,
+        issuer: config.app.JWT_ISSUER,
+        audience: config.app.JWT_AUDIENCE,
+    });
     return { token, jti, expiresIn: ACCESS_TOKEN_TTL };
 };
 
@@ -43,18 +34,11 @@ const signAccessToken = ({ sub, email, role }) => {
  */
 const signRefreshToken = ({ sub }) => {
     const jti = `jti-${randomUUID()}`;
-    const token = jwt.sign(
-        {
-            sub,
-            jti,
-        },
-        loadPrivateKey(),
-        {
-            algorithm: 'RS256',
-            expiresIn: REFRESH_TOKEN_TTL,
-            keyid: config.app.JWT_KEY_ID,
-        }
-    );
+    const token = jwt.sign({ sub, jti }, loadPrivateKey(), {
+        algorithm: 'RS256',
+        expiresIn: REFRESH_TOKEN_TTL,
+        keyid: config.app.JWT_KEY_ID,
+    });
     return { token, jti, expiresIn: REFRESH_TOKEN_TTL };
 };
 
