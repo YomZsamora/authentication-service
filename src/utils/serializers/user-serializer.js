@@ -20,10 +20,6 @@ const serializeUser = (user) => ({
  * @param {Object} user - The user object to serialize.
  * @returns {Object} The serialized user object for authentication.
  */
-const serializeAuthUser = (user) => ({
-    id: user.id,
-    email: user.email,
-    role: user.role,
-});
+const serializeAuthUser = (user) => ({ id: user.id, email: user.email, role: user.role });
 
 module.exports = { serializeUser, serializeAuthUser };
