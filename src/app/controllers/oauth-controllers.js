@@ -67,16 +67,15 @@ const callbackGoogleOAuthController = async (req, res, next) => {
             ttlSeconds: REFRESH_TOKEN_TTL,
         });
         setRefreshCookie(res, refreshToken);
-        const apiResponse = new ApiResponse();
-        apiResponse.message = 'Google OAuth authentication successful.';
-        apiResponse.data = { accessToken, refreshToken, tokenType: 'Bearer' };
-        return res.status(200).json(apiResponse);
+        const apiResponse = new ApiResponse(200, 'Google OAuth authentication successful.', {
+            accessToken,
+            refreshToken,
+            tokenType: 'Bearer',
+        });
+        return res.status(apiResponse.statusCode).json(apiResponse);
     } catch (error) {
         next(error);
     }
 };
 
-module.exports = {
-    initiateGoogleOAuthController,
-    callbackGoogleOAuthController,
-};
+module.exports = { initiateGoogleOAuthController, callbackGoogleOAuthController };
