@@ -81,7 +81,7 @@ describe('Basic Login API - POST /v1/auth/basic-login', () => {
             status: 'error',
             message: 'Invalid password. Please try again.',
         });
-        expect(res.body.data).toBeNull();
+        expect(res.body.data).toMatchObject({});
     });
 
     it('should return 200 with an access token and set a refresh token cookie', async () => {

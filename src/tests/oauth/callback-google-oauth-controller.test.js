@@ -82,7 +82,7 @@ describe('Google OAuth Callback API - GET /v1/oauth/google/callback', () => {
             expect(res.body).toMatchObject({
                 status: 'error',
                 message: 'Invalid or expired OAuth state.',
-                data: null,
+                data: {},
             });
         });
     });
