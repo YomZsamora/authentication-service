@@ -24,7 +24,4 @@ const verifyOAuthStateValidator = (req, res, next) => {
     })(req, res, next);
 };
 
-module.exports = {
-    callbackGoogleOAuthValidators,
-    verifyOAuthStateValidator,
-};
+module.exports = { callbackGoogleOAuthValidators, verifyOAuthStateValidator };
