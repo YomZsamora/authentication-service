@@ -51,10 +51,12 @@ const basicRegistrationController = async (req, res, next) => {
             email: user.email,
             name: user.email.split('@')[0],
         });
-        const apiResponse = new ApiResponse();
-        apiResponse.message = 'New user account created successfully.';
-        apiResponse.data = userSerializer.serializeUser(user);
-        res.status(201).json(apiResponse);
+        const apiResponse = new ApiResponse(
+            201,
+            'New user account created successfully.',
+            userSerializer.serializeUser(user)
+        );
+        res.status(apiResponse.statusCode).json(apiResponse);
     } catch (error) {
         next(error);
     }
@@ -80,10 +82,12 @@ const basicLoginController = async (req, res, next) => {
             ttlSeconds: REFRESH_TOKEN_TTL,
         });
         setRefreshCookie(res, refreshToken);
-        const apiResponse = new ApiResponse();
-        apiResponse.message = 'Logged in successfully.';
-        apiResponse.data = { accessToken, tokenType: 'Bearer', expiresIn };
-        res.status(200).json(apiResponse);
+        const apiResponse = new ApiResponse(200, 'Logged in successfully.', {
+            accessToken,
+            tokenType: 'Bearer',
+            expiresIn,
+        });
+        res.status(apiResponse.statusCode).json(apiResponse);
     } catch (error) {
         next(error);
     }
@@ -114,10 +118,12 @@ const refreshTokenController = async (req, res, next) => {
             ttlSeconds: REFRESH_TOKEN_TTL,
         });
         setRefreshCookie(res, refreshToken);
-        const apiResponse = new ApiResponse();
-        apiResponse.message = 'Token refreshed successfully.';
-        apiResponse.data = { accessToken, tokenType: 'Bearer', expiresIn };
-        res.status(200).json(apiResponse);
+        const apiResponse = new ApiResponse(200, 'Token refreshed successfully.', {
+            accessToken,
+            tokenType: 'Bearer',
+            expiresIn,
+        });
+        res.status(apiResponse.statusCode).json(apiResponse);
     } catch (error) {
         next(error);
     }
@@ -155,9 +161,8 @@ const logoutController = async (req, res, next) => {
             }
         }
         clearRefreshCookie(res);
-        const apiResponse = new ApiResponse();
-        apiResponse.message = 'Logged out successfully.';
-        res.status(200).json(apiResponse);
+        const apiResponse = new ApiResponse(200, 'Logged out successfully.');
+        res.status(apiResponse.statusCode).json(apiResponse);
     } catch (error) {
         next(error);
     }
