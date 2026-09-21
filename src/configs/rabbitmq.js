@@ -8,7 +8,6 @@ let connection = null;
 let channel = null;
 
 const connect = async (attempt = 0) => {
-    
     try {
         connection = await amqp.connect(config.app.AMQP_URL);
         channel = await connection.createChannel();
@@ -25,9 +24,11 @@ const connect = async (attempt = 0) => {
             channel = null;
             connect(0);
         });
-
     } catch (err) {
-        logger.warn({ attempt: attempt + 1, error: err.message }, 'RabbitMQ connection attempt failed');
+        logger.warn(
+            { attempt: attempt + 1, error: err.message },
+            'RabbitMQ connection attempt failed'
+        );
 
         if (attempt >= RECONNECT_DELAYS_MS.length - 1) {
             logger.fatal('Max reconnect attempts reached — exiting');
