@@ -126,7 +126,8 @@ const emailExistsValidator = (req, res, next) => {
 const verifyPasswordValidator = (req, res, next) => {
     const { password } = req.body;
     const user = req.user;
-    if (!user.isValidPassword(password)) return next(new BadRequest('Invalid password. Please try again.'));
+    if (!user.isValidPassword(password))
+        return next(new BadRequest('Invalid password. Please try again.'));
     next();
 };
 
