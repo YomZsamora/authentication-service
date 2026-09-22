@@ -28,17 +28,13 @@ const verifyJtiExists = async (jti) => {
  * @param {string} jti - The unique identifier of the refresh token to delete.
  * @returns {Promise<number>} - A promise that resolves to the number of records deleted (0 or 1).
  */
-const deleteByJti = async (jti) => {
-    return RefreshToken.destroy({ where: { jti } });
-};
+const deleteByJti = async (jti) => RefreshToken.destroy({ where: { jti } });
 
 /** * Revokes all refresh tokens associated with a specific user by deleting them from the database.
  * @param {string} userId - The user ID whose refresh tokens should be revoked.
  * @returns {Promise<number>} - A promise that resolves to the number of records deleted.
  */
-const revokeAllUserSessions = async (userId) => {
-    return RefreshToken.destroy({ where: { userId } });
-};
+const revokeAllUserSessions = async (userId) => RefreshToken.destroy({ where: { userId } });
 
 module.exports = {
     storeRefreshToken,
