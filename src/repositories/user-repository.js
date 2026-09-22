@@ -6,38 +6,30 @@ const { User } = require('../models/user');
  * @param {Object} userData - The user data containing email, password, and optional role.
  * @returns {Promise<Object>} - The created user object.
  */
-const registerUser = async ({ email, password, role = 'USER' }) => {
-    return User.create({ email, password, role });
-};
+const registerUser = async ({ email, password, role = 'USER' }) => User.create({ email, password, role });
 
 /**
  * Finds a user by their email address.
  * @param {string} email - The email address of the user to find.
  * @returns {Promise<Object|null>} - The found user object or null if not found.
  */
-const findUserByEmail = async (email) => {
-    return User.findOne({
+const findUserByEmail = async (email) => User.findOne({
         where: { email: email.trim().toLowerCase() },
         attributes: ['id', 'email', 'role'],
     });
-};
 
-const findUserByEmailForAuth = async (email) => {
-    return User.findOne({
+const findUserByEmailForAuth = async (email) => User.findOne({
         where: { email: email.trim().toLowerCase() },
         attributes: ['id', 'email', 'password', 'role'],
     });
-};
 
 /** * Finds a user by their unique identifier (ID).
  * @param {string} id - The unique identifier of the user to find.
  * @returns {Promise<Object|null>} - The found user object or null if not found.
  */
-const findUserById = async (id) => {
-    return User.findByPk(id, {
+const findUserById = async (id) => User.findByPk(id, {
         attributes: ['id', 'email', 'role'],
     });
-};
 
 /** * Finds a user by their Google sub or creates a new user if not found.
  * @param {Object} params - The parameters for finding or creating the user.
@@ -64,12 +56,10 @@ const userEmailExists = async (email) => {
     return !!user;
 };
 
-const findUsersByIds = async (ids) => {
-    return User.findAll({
+const findUsersByIds = async (ids) => User.findAll({
         where: { id: { [Op.in]: ids } },
         attributes: ['id', 'role'],
     });
-};
 
 module.exports = {
     registerUser,
