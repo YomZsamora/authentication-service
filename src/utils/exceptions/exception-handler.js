@@ -20,35 +20,27 @@ const exceptionHandler = (err, req, res, _next) => {
     return res.status(statusCode).json(apiResponse);
 };
 
-const formatExceptions = (errors) => {
-    return Object.fromEntries(
+const formatExceptions = (errors) => Object.fromEntries(
         Object.entries(errors.mapped()).map(([field, error]) => [field, error.msg])
     );
-};
 
-const formatLoggerExceptions = (errors) => {
-    return errors && typeof errors === 'object' ? Object.values(errors).join(', ') : errors;
-};
+const formatLoggerExceptions = (errors) => errors && typeof errors === 'object' ? Object.values(errors).join(', ') : errors;
 
-const handleBadRequests = (errorMessage = 'Validation failed.') => {
-    return (req, res, next) => {
+const handleBadRequests = (errorMessage = 'Validation failed.') => (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             throw new BadRequest(errorMessage, formatExceptions(errors));
         }
         next();
     };
-};
 
-const handleNotFoundErrors = (errorMessage = 'Resource not found.') => {
-    return (req, res, next) => {
+const handleNotFoundErrors = (errorMessage = 'Resource not found.') => (req, res, next) => {
         const resource = req.resource;
         if (!resource) {
             throw new NotFound(errorMessage);
         }
         next();
     };
-};
 
 module.exports = {
     exceptionHandler,
