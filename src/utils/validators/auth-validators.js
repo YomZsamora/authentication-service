@@ -107,8 +107,7 @@ const loginPasswordFieldValidator = body('password')
  * @param {string} email - The email address to check for existence.
  * @returns {Promise<void>} - Resolves if the email exists, otherwise throws an error.
  */
-const emailExistsValidator = (req, res, next) => {
-    return body('email').custom(async (email, { req }) => {
+const emailExistsValidator = (req, res, next) => body('email').custom(async (email, { req }) => {
         const user = await userRepository.findUserByEmailForAuth(email);
         if (!user)
             return next(
@@ -117,7 +116,6 @@ const emailExistsValidator = (req, res, next) => {
         req.user = user;
         return true;
     })(req, res, next);
-};
 
 /** * Validates that the provided password matches the stored password for the user during login.
  * @param {string} password - The password to validate.
