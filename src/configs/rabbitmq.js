@@ -8,7 +8,9 @@ let connection = null;
 let channel = null;
 
 const connect = async (attempt = 0) => {
+
     try {
+        
         connection = await amqp.connect(config.app.AMQP_URL);
         channel = await connection.createChannel();
 
