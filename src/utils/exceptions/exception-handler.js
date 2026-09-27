@@ -1,9 +1,10 @@
-const { validationResult } = require('express-validator');
-const { ApiResponse } = require('../responses');
 const logger = require('../logger');
+const { ApiResponse } = require('../responses');
+const { validationResult } = require('express-validator');
 const { BadRequest, NotFound } = require('./custom-exceptions');
 
 const exceptionHandler = (err, req, res, _next) => {
+
     const statusCode = err.statusCode || 500;
     const message = err.message || 'Internal Server Error';
     const data = err.errors || {};
